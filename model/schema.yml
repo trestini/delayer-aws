@@ -1,0 +1,145 @@
+id: "ifood-schemas/scheduler-service/schedule"
+$schema: "http://json-schema.org/draft-06/schema#"
+title: schedule
+type: object
+properties:
+  schedule:
+    type: object
+    properties:
+      pointInTime:
+        $ref: "#/definitions/pointInTime"
+      fromNow:
+        $ref: "#/definitions/fromNow"
+    oneOf:
+      - required:
+          - pointInTime
+      - required:
+          - fromNow
+    additionalProperties: false
+  context:
+    $ref: "#/definitions/context"
+  action:
+    type: object
+    properties:
+      type:
+        enum:
+          - HTTP
+          - SQS_SEND
+          - SQS_RECEIVE
+          - SNS_SEND
+      httpConfig:
+        $ref: "#/definitions/httpConfig"
+    additionalProperties: false
+  notification:
+    type: object
+    properties:
+      slack:
+        $ref: "#/definitions/slackNotification"
+      email:
+        $ref: "#/definitions/emailNotification"
+    anyOf:
+      - required:
+        - slack
+      - required:
+        - email
+required:
+  - schedule
+  - context
+  - action
+additionalProperties: false
+
+definitions:
+  pointInTime:
+    type: string
+    format: date-time
+  fromNow:
+    type: object
+    properties:
+      amount:
+        type: number
+      unit:
+        enum:
+          - MINUTE
+          - HOUR
+          - DAY
+    required:
+      - amount
+      - unit
+    additionalProperties: false
+  context:
+    type: object
+    properties:
+      headers:
+        type: array
+        items:
+          type: object
+      payload:
+        type: string
+    additionalProperties: false
+  httpConfig:
+    type: object
+    properties:
+      method:
+        $ref: "#/definitions/httpMethod"
+      url:
+        type: string
+      requestType:
+        enum:
+          - WAIT_RETURN
+          - FIRE_FORGET
+      returnExpected:
+        type: object
+        properties:
+          code:
+            type: array
+            items:
+              type: number
+          body:
+            type: string
+        required:
+          - code
+      preCheck:
+        type: object
+        properties:
+          method:
+            $ref: "#/definitions/httpMethod"
+          url:
+            type: string
+    additionalProperties: false
+
+  httpMethod:
+    enum:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - HEAD
+      - OPTIONS
+  # Notificacoes ainda sao WIP
+  slackNotification:
+    properties:
+      slack:
+        type: object
+        properties:
+          account:
+            type: string
+          recipients:
+            type: array
+            items:
+              type: string
+        required:
+          - recipients
+        additionalProperties: false
+  emailNotification:
+    properties:
+      email:
+        type: object
+        properties:
+          recipients:
+            type: array
+            items:
+              type: string
+        required:
+          - recipients
+        additionalProperties: false
