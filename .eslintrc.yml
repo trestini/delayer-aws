@@ -16,3 +16,5 @@ rules:
     - always
   no-var:
     - error
+  no-console:
+    - off
