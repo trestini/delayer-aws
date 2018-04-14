@@ -18,7 +18,7 @@ exports.handler = (event, context, callback) => {
 
     let dbobj = {
       schedule_id: schedule_id,
-      point_in_time: scheduleTime.toISOString(),
+      point_in_time: scheduleTime.unix(),
       action_type: event.action.type,
       action_config: event.action.httpConfig,
       notification: event.notification,
