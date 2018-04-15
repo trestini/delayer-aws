@@ -1,7 +1,10 @@
 const AWS = require('aws-sdk');
-const schedule = require('./schedule');
 const shortid = require('shortid');
 const moment = require('moment');
+
+/* validators */
+const schedule = require('./schedule');
+const action = require('./action');
 
 AWS.config.update({
   region: 'us-east-1'
@@ -13,7 +16,7 @@ exports.handler = (event, context, callback) => {
 
   try {
     let scheduleTime = schedule.scheduleTimeFromEvent(event);
-    console.log(`Schedule will be created for ${scheduleTime} local time`);
+    console.log(`Schedule will be created in ${scheduleTime}`);
 
     const scheduleId = shortid.generate();
 

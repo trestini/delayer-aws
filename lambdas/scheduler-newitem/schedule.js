@@ -2,16 +2,15 @@ const moment = require('moment');
 
 module.exports = {
 
+
   scheduleTimeFromEvent(event){
     let scheduleTime = undefined;
-    if( event.schedule.pointInTime ){
-      scheduleTime = Utils.checkers.date(event.schedule.pointInTime);
-    } else {
-      const fromNow = event.schedule.fromNow;
-      scheduleTime = moment().add(fromNow.amount, Utils.trToTime(fromNow.unit));
+    scheduleTime = Utils.checkers.date(event.schedule.pointInTime);
+    if( !scheduleTime ){
+      throw `${event.schedule.pointInTime} is not a valid date`;
     }
 
-    const now = moment().utc();
+    const now = moment.utc();
     const constraint = now.add(3, 'm');
     if( !scheduleTime.isAfter(constraint) ){
       throw `Unable to create a schedule before ${constraint} (UTC)`;
@@ -25,21 +24,8 @@ module.exports = {
 const Utils = {
   checkers: {
     date(strDate){
-      const d = moment(strDate, moment.ISO_8601).utc();
+      const d = moment.utc(strDate, moment.ISO_8601);
       return d.isValid() ? d : undefined;
-    }
-  },
-
-  trToTime(en){
-    switch (en) {
-    case "MINUTE":
-      return "m";
-    case "HOUR":
-      return "h";
-    case "DAY":
-      return "d";
-    default:
-      return undefined;
     }
   }
 };

@@ -8,13 +8,8 @@ properties:
     properties:
       pointInTime:
         $ref: "#/definitions/pointInTime"
-      fromNow:
-        $ref: "#/definitions/fromNow"
-    oneOf:
-      - required:
-          - pointInTime
-      - required:
-          - fromNow
+    required:
+      - pointInTime
     additionalProperties: false
   context:
     $ref: "#/definitions/context"
@@ -52,20 +47,6 @@ definitions:
   pointInTime:
     type: string
     format: date-time
-  fromNow:
-    type: object
-    properties:
-      amount:
-        type: number
-      unit:
-        enum:
-          - MINUTE
-          - HOUR
-          - DAY
-    required:
-      - amount
-      - unit
-    additionalProperties: false
   context:
     type: object
     properties:
