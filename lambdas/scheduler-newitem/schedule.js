@@ -6,17 +6,18 @@ module.exports = {
     let scheduleTime = undefined;
     if( event.schedule.pointInTime ){
       scheduleTime = Utils.checkers.date(event.schedule.pointInTime);
-      const now = moment().utc();
-      const constraint = now.add(3, 'm');
-      if( !scheduleTime.isAfter(constraint) ){
-        throw `Schedules are constrained to 3 minutes from now. Scheduled for: ${scheduleTime}, Constraint: ${constraint} (times in UTC)`;
-      }
     } else {
       const fromNow = event.schedule.fromNow;
       scheduleTime = moment().add(fromNow.amount, Utils.trToTime(fromNow.unit));
     }
 
-    return scheduleTime;
+    const now = moment().utc();
+    const constraint = now.add(3, 'm');
+    if( !scheduleTime.isAfter(constraint) ){
+      throw `Unable to create a schedule before ${constraint} (UTC)`;
+    } else {
+      return scheduleTime;
+    }
   }
 
 };

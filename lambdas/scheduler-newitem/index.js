@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const schedule = require('./schedule');
 const shortid = require('shortid');
+const moment = require('moment');
 
 AWS.config.update({
   region: 'us-east-1'
@@ -14,15 +15,16 @@ exports.handler = (event, context, callback) => {
     let scheduleTime = schedule.scheduleTimeFromEvent(event);
     console.log(`Schedule will be created for ${scheduleTime} local time`);
 
-    const schedule_id = shortid.generate();
+    const scheduleId = shortid.generate();
 
     let dbobj = {
-      schedule_id: schedule_id,
-      point_in_time: scheduleTime.unix(),
-      action_type: event.action.type,
-      action_config: event.action.httpConfig,
+      scheduleId: scheduleId,
+      pointInTime: scheduleTime.unix(),
+      actionType: event.action.type,
+      actionConfig: event.action.httpConfig,
       notification: event.notification,
-      state: event.context
+      state: event.context,
+      createdOn: moment().utc().unix(),
     };
 
     const dynamoRequest = {
@@ -30,11 +32,11 @@ exports.handler = (event, context, callback) => {
       Item: dbobj
     };
 
-    ddb.put(dynamoRequest, (err, data) => {
+    ddb.put(dynamoRequest, (err) => {
       if (err) {
         callback(err);
       } else {
-        callback(null, { status: ":ok", httpCode: 201, response: { schedule_id: schedule_id } });
+        callback(null, { status: ":ok", httpCode: 201, response: { scheduleId: scheduleId } });
       }
     });
 
