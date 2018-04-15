@@ -18,3 +18,4 @@ rules:
     - error
   no-console:
     - off
+  camelcase: 2
