@@ -2,13 +2,18 @@
 
 const index = require('./index');
 
+const amount = process.argv[2];
+const unit = process.argv[3];
+
+console.log(`Amount: ${amount}, Unit: ${unit}`);
+
 const event = {
   "schedule" : {
-    "pointInTime": "2018-04-15T10:00:00-0300"
-    // "fromNow" : {
-    //   "amount" : 5,
-    //   "unit" : "MINUTE"
-    // }
+    // "pointInTime": "2018-04-15T10:00:00-0300"
+    "fromNow" : {
+      "amount" : amount,
+      "unit" : unit
+    }
   },
   "context": {
     "headers" : [
