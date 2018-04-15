@@ -4,7 +4,6 @@ const moment = require('moment');
 
 /* validators */
 const schedule = require('./schedule');
-const action = require('./action');
 
 AWS.config.update({
   region: 'us-east-1'
@@ -26,8 +25,8 @@ exports.handler = (event, context, callback) => {
       actionType: event.action.type,
       actionConfig: event.action.httpConfig,
       notification: event.notification,
-      state: event.context,
-      createdOn: moment().utc().unix(),
+      context: event.context,
+      createdOn: moment.utc().unix(),
     };
 
     const dynamoRequest = {
