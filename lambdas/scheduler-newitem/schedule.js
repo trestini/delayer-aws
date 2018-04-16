@@ -3,11 +3,11 @@ const moment = require('moment');
 module.exports = {
 
 
-  scheduleTimeFromEvent(event){
+  scheduleTimeFromEvent(scheduleObj){
     let scheduleTime = undefined;
-    scheduleTime = Utils.checkers.date(event.schedule.pointInTime);
+    scheduleTime = Utils.checkers.date(scheduleObj.pointInTime);
     if( !scheduleTime ){
-      throw `${event.schedule.pointInTime} is not a valid date`;
+      throw `${scheduleObj.pointInTime} is not a valid date`;
     }
 
     const now = moment.utc();
