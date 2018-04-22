@@ -2,9 +2,9 @@
 
 const index = require('./index');
 
-const event = {
+const body = {
   "schedule" : {
-    "pointInTime": process.argv[2]
+    "pointInTime" : "2018-04-22T00:45:00-0300"
   },
   "context": {
     "headers" : [
@@ -36,7 +36,15 @@ const event = {
       "recipients": ["#channel"]
     }
   }
+};
 
+const event = {
+  "requestContext": {
+    "identity": {
+      "apiKey": "test_api_key"
+    }
+  },
+  "body": JSON.stringify(body)
 };
 
 index.handler(event, null, (err, out) => {

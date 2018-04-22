@@ -15,37 +15,57 @@ exports.handler = (request, context, callback) => {
 
   const apiKey = request.requestContext.identity.apiKey;
   const scheduleId = shortid.generate();
-  const currentState = "COLD";
+  const currentStatus = "COLD";
 
   const body = JSON.parse(request.body);
 
   try {
-    let scheduleTime = schedule.scheduleTimeFromEvent(body.schedule);
+
+    let scheduleTime = undefined;
+
+    try{
+      scheduleTime = schedule.scheduleTimeFromEvent(body.schedule);
+    } catch (e) {
+      console.warn(e);
+      Utils.handleError(callback, e, 400);
+      return;
+    }
+
     console.log(`Schedule will be created in ${scheduleTime}`);
+
+    const timeframePrefix = scheduleTime.format('YYYY-MM-DD_HH');
+    const timeframeIndex = parseInt(scheduleTime.minute() / 15);
+
+    const scheduleTimeframe = timeframePrefix + "-" + timeframeIndex;
+
+    const pointInTime = scheduleTime.unix();
+    const purgeAt = pointInTime + (60 * 60 * 24 * 30); // 30 dias
 
     let dbobj = {
       /* indexes */
+      scheduleTimeframe: scheduleTimeframe,
       scheduleId: scheduleId,
       pointInTime: scheduleTime.unix(),
       /* /indexes */
+      currentStatus: currentStatus,
       apiKey: apiKey,
-      currentState: currentState,
-      actionType: body.action.type,
       actionConfig: body.action.httpConfig,
       notification: body.notification,
       context: body.context,
       createdOn: moment.utc().unix(),
+      purgeAt: purgeAt
     };
 
-    console.log("Sending object to dynamodb:\n", JSON.stringify(dbobj, null, 2));
+    // console.log("Sending object to dynamodb:\n", JSON.stringify(dbobj, null, 2));
 
     const dynamoRequest = {
-      TableName: 'schedules',
+      TableName: 'schedule',
       Item: dbobj
     };
 
     ddb.put(dynamoRequest, (err) => {
       if (err) {
+        console.error(err);
         Utils.handleError(callback, err);
       } else {
         const ret = {
@@ -58,7 +78,8 @@ exports.handler = (request, context, callback) => {
     });
 
   } catch (e) {
-    Utils.handleError(callback, e, 400);
+    console.error(e);
+    Utils.handleError(callback, e, 500);
   }
 
 };
@@ -84,7 +105,7 @@ const Utils = {
     } else if( typeof(err) == 'object' && err.msg !== undefined ){
       errmsg = err.msg;
     } else {
-      errmsg = "Internal Server Error";
+      errmsg = "Request could not be completed";
     }
     this.buildResponse(callback, statusCode ? statusCode : 500, {message : errmsg});
   }

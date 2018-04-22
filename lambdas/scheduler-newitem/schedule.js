@@ -24,8 +24,17 @@ module.exports = {
 const Utils = {
   checkers: {
     date(strDate){
-      const d = moment.utc(strDate, moment.ISO_8601);
-      return d.isValid() ? d : undefined;
+      let parsed;
+      if( Utils.isNumberic(strDate) ){
+        parsed = moment.unix(strDate).utc();
+      } else {
+        parsed = moment.utc(strDate, moment.ISO_8601);
+      }
+
+      return parsed.isValid() ? parsed : undefined;
     }
+  },
+  isNumberic(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
   }
 };
