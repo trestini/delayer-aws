@@ -9,8 +9,10 @@ const ddb = new AWS.DynamoDB.DocumentClient({
   apiVersion: '2012-08-10'
 });
 const sqs = new AWS.SQS();
+const sns = new AWS.SNS();
+
 const queueURL = "https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks";
-const lambda = new AWS.Lambda();
+const topicArn = "arn:aws:sns:us-east-1:472249637553:http_action";
 
 exports.handler = (request, context, callback) => {
 
@@ -74,19 +76,32 @@ const Messages = {
 
     console.log(`Publicando no SNS: ${msg.scheduleId} with ${drift}ms of difference`);
 
-    return sqs.deleteMessage({
-      QueueUrl: queueURL,
-      ReceiptHandle: sqsMessage.ReceiptHandle
+    return sns.publish({
+      Message: sqsMessage.Body,
+      TopicArn: topicArn
     })
       .promise()
-      .then( data => {
-        console.log("deleted: ", data)
-        return { processed: true };
+      .then( result => {
+
+        console.log("sns result: ", result);
+
+        return sqs.deleteMessage({
+          QueueUrl: queueURL,
+          ReceiptHandle: sqsMessage.ReceiptHandle
+        })
+          .promise()
+          .then( data => {
+            return { processed: true, result : data };
+          })
+          .catch( err => {
+            return { processed: false, err: err };
+          });
       })
       .catch( err => {
-        console.error("error on delete: ", err)
-        return { processed: false };
+        console.error("err ", err);
+        return { processed: false, err: err };
       });
+
   }
 
 };
