@@ -11,7 +11,7 @@ module.exports = {
     }
 
     const now = moment.utc();
-    const constraint = now.add(3, 'm');
+    const constraint = now.add(90, 's');
     if( !scheduleTime.isAfter(constraint) ){
       throw `Unable to create a schedule before ${constraint} (UTC)`;
     } else {
