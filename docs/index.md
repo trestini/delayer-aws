@@ -21,4 +21,4 @@ The delayer-aws' core values are:
 *   simplistic: set a point in time in the future and let delayer call an HTTP request or put message in a SQS queue in a reliable way for you
 *   serverless: as a consequence of simplicity, there's no need to take care about servers
 
-Check out [madr docs](docs/adr) for some architectural decisions.
+Check out [adr docs](adr/) for some architectural decisions.
