@@ -1,4 +1,3 @@
-scheduler-service
-=================
+# delayer-aws
 
-Cloud-native distributed scheduler built on top of AWS services
+Simplistic cloud-native distributed scheduler, *serverlessly* built on top of AWS services
