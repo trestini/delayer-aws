@@ -16,7 +16,7 @@ exports.handler = (request, context, callback) => {
   const timeframeIni = Utils.timeframe(now);
   const timeframeEnd = Utils.timeframe(daquiA14);
 
-  console.log(`Quering from ${timeframeIni} and ${timeframeEnd}`);
+  // console.log(`Quering from ${timeframeIni} and ${timeframeEnd}`);
 
   let params1 = {
     TableName : "schedule",
@@ -59,7 +59,9 @@ exports.handler = (request, context, callback) => {
 
       items
         .filter(item => {
-          return item.currentStatus === 'COLD' && item.pointInTime > now.unix() && item.pointInTime < daquiA14.unix();
+          return item.currentStatus === 'COLD'
+          && item.pointInTime > now.unix()
+          && item.pointInTime < daquiA14.unix();
         })
         .forEach(item => {
           Transition.warmIt(item);
@@ -118,8 +120,8 @@ const Transition = {
     console.log(`Publicando mensagem com delay de ${delay}s`);
 
     const params = {
-      MessageBody: JSON.stringify(item), /* required */
-      QueueUrl: 'https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks', /* required */
+      MessageBody: JSON.stringify(item),
+      QueueUrl: 'https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks',
       DelaySeconds: delay
     };
 
@@ -139,19 +141,18 @@ const Transition = {
           ExpressionAttributeValues:{
             ":status": "WARM",
             ":mId": data.MessageId,
-          }
+          },
+          ReturnValues: "UPDATED_NEW"
         };
 
-        ddb.update(params, function(err, data) {
+        ddb.update(params, (err, data) => {
           if (err) {
             console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
           } else {
-            console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
+            console.log("UpdateItem succeeded:", data);
           }
         });
-
       }
     });
-
   }
 };
