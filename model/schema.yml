@@ -1,4 +1,4 @@
-id: "ifood-schemas/scheduler-service/schedule"
+id: "schemas/delayer-api/schedule"
 $schema: "http://json-schema.org/draft-06/schema#"
 title: schedule
 type: object
