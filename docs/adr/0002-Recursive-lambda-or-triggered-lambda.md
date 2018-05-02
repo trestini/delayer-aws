@@ -56,5 +56,5 @@ configured timeouts while CloudWatch triggers new executions in some intervals.
 
 ## Links
 
-*   [https://github.com/serverless/examples/blob/master/aws-node-recursive-function/handler.js]
-*   [https://theburningmonk.com/2017/08/write-recursive-aws-lambda-functions-the-right-way/]
+*   https://github.com/serverless/examples/blob/master/aws-node-recursive-function/handler.js
+*   https://theburningmonk.com/2017/08/write-recursive-aws-lambda-functions-the-right-way/

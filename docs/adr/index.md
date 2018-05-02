@@ -10,7 +10,3 @@ This log lists the architectural decisions for delayer-aws.
 - [ADR-0003](0003-dymamodb-update-strategy.md) - DynamoDB update strategy
 
 <!-- adrlogstop -->
-
-More information on MADR is available at <https://adr.github.io/madr/>.
-General information about architectural decision records is available at <https://adr.github.io/>.
-
