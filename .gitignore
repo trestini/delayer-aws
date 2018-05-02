@@ -8,3 +8,4 @@ public/components
 .DS_Store
 test-results.xml
 coverage/
+dist/
