@@ -19,7 +19,7 @@ gulp.task('build-deps', () => {
     .pipe(install({production: true}));
 });
 
-gulp.task('uninst-aws', run('npm uninstall --prefix ' + TMP_DIR + ' aws-sdk'));
+gulp.task('uninstall-packages', run('npm uninstall --prefix ' + TMP_DIR + ' aws-sdk gulp gulp-install gulp-zip del gulp-run-command run-sequence'));
 
 gulp.task('zip', () => {
   return gulp.src(TMP_DIR + '/**/*')
@@ -31,6 +31,12 @@ gulp.task('clean-tmp', () => {
   del(TMP_DIR);
 });
 
+gulp.task('clean-dist', () => {
+  del(DIST_DIR);
+});
+
+gulp.task('deploy', run('aws lambda update-function-code --function-name=api-newitem --zip-file=fileb://./dist/package.zip'));
+
 gulp.task('build', (callback) => {
-  runSequence('copy-src', 'build-deps', 'uninst-aws', 'zip', 'clean-tmp', callback);
+  runSequence('clean-dist', 'copy-src', 'build-deps', 'uninstall-packages', 'zip', 'clean-tmp', callback);
 });
