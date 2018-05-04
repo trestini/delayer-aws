@@ -7,7 +7,9 @@
     "test": "test"
   },
   "dependencies": {
-    "aws-sdk": "^2.230.1"
+    "aws-sdk": "^2.230.1",
+    "moment": "^2.22.1",
+    "shortid": "^2.2.8"
   },
   "devDependencies": {
     "del": "^3.0.0",

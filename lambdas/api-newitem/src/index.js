@@ -14,6 +14,8 @@
 const lambda = require('api-newitem');
 const logger = require('support/logger');
 
+const AWS = require('aws-sdk');
+
 exports.handler = (event, context, callback) => {
 
   let handler;
@@ -26,7 +28,8 @@ exports.handler = (event, context, callback) => {
   const request = handler.request(event, context);
   const response = handler.response(callback);
   const support = {
-    logger: logger
+    logger: logger,
+    dynamoDb: new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'})
   };
 
   try {

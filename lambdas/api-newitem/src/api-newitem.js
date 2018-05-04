@@ -12,14 +12,82 @@
  * limitations under the License.
 */
 
+const moment = require('moment');
+const shortid = require('shortid');
+
+const schedule = require('./schedule');
+
 module.exports = {
   start(request, response, support){
 
-    const { logger } = support;
+    const { logger, dynamoDb } = support;
 
-    logger.info(`received: ${JSON.stringify(request)}`);
-    response.ok({body: "this is the body"}, {'Content-Type': 'text/plain'});
+    const apiKey = request.requestContext.identity.apiKey;
+    const scheduleId = shortid.generate();
+
+    const body = request.body;
+
+    try {
+
+      let scheduleTime = undefined;
+
+      try{
+        scheduleTime = schedule.scheduleTimeFromEvent(body.schedule);
+      } catch (e) {
+        logger.warn(e);
+        response.badRequest(e);
+        return;
+      }
+
+      logger.info(`Schedule will be created in ${scheduleTime}`);
+
+      const timeframePrefix = scheduleTime.format('YYYY-MM-DD_HH');
+      const timeframeIndex = parseInt(scheduleTime.minute() / 15);
+
+      const scheduleTimeframe = timeframePrefix + "-" + timeframeIndex;
+
+      const pointInTime = scheduleTime.unix();
+      const purgeAt = pointInTime + (60 * 60 * 24 * 30); // 30 dias
+
+      let dbobj = {
+        /* indexes */
+        scheduleTimeframe: scheduleTimeframe,
+        scheduleId: scheduleId,
+        pointInTime: scheduleTime.unix(),
+        /* /indexes */
+        apiKey: apiKey,
+        actionConfig: body.action.httpConfig,
+        notification: body.notification,
+        context: body.context,
+        createdOn: moment.utc().unix(),
+        purgeAt: purgeAt
+      };
+
+      // console.log("Sending object to dynamodb:\n", JSON.stringify(dbobj, null, 2));
+
+      const dynamoRequest = {
+        TableName: 'schedule',
+        Item: dbobj
+      };
+
+      dynamoDb.put(dynamoRequest, (err) => {
+        if (err) {
+          logger.error(err);
+          response.badRequest(err);
+        } else {
+          const ret = {
+            scheduleId: scheduleId,
+            pointInTime: scheduleTime.format()
+          };
+
+          response.created(ret);
+        }
+      });
+
+    } catch (e) {
+      logger.error(e);
+      response.internalServerError(e);
+    }
 
   }
 };
-
