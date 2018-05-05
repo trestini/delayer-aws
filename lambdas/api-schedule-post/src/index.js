@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-const lambda = require('api-newitem');
+const lambda = require('api-schedule-post');
 const logger = require('support/logger');
 
 const AWS = require('aws-sdk');

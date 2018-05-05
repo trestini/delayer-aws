@@ -35,7 +35,7 @@ gulp.task('clean-dist', () => {
   del(DIST_DIR);
 });
 
-gulp.task('deploy', run('aws lambda update-function-code --function-name=api-newitem --zip-file=fileb://./dist/package.zip'));
+gulp.task('deploy', run('aws lambda update-function-code --function-name=api-schedule-post --zip-file=fileb://./dist/package.zip'));
 
 gulp.task('build', (callback) => {
   runSequence('clean-dist', 'copy-src', 'build-deps', 'uninstall-packages', 'zip', 'clean-tmp', callback);
