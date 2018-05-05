@@ -8,6 +8,7 @@ This log lists the architectural decisions for delayer-aws.
 - [ADR-0001](0001-select-proper-name-for-the-project.md) - Select a proper name for the project
 - [ADR-0002](0002-Recursive-lambda-or-triggered-lambda.md) - Recursive lambda or CloudWatch-triggered lambda
 - [ADR-0003](0003-dymamodb-update-strategy.md) - DynamoDB update strategy
+- [ADR-0004](0004-use-log-framework-for-logging.md) - Use of a logging framework
 
 <!-- adrlogstop -->
 
