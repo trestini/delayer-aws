@@ -6,12 +6,10 @@ This log lists the architectural decisions for delayer-aws.
 
 - [ADR-0000](0000-use-markdown-architectural-decision-records.md) - Use some kind of Lightweight Architectural Decision Records
 - [ADR-0001](0001-select-proper-name-for-the-project.md) - Select a proper name for the project
-- [ADR-0002](0002-Recursive-lambda-or-triggered-lambda.md) - Recursive lambda or CloudWatch-triggered lambda
+- [ADR-0002](0002-recursive-lambda-or-triggered-lambda.md) - Recursive lambda or CloudWatch-triggered lambda
 - [ADR-0003](0003-dymamodb-update-strategy.md) - DynamoDB update strategy
 - [ADR-0004](0004-use-log-framework-for-logging.md) - Use of a logging framework
 
 <!-- adrlogstop -->
 
-More information on MADR is available at <https://adr.github.io/madr/>.
-General information about architectural decision records is available at <https://adr.github.io/>.
 

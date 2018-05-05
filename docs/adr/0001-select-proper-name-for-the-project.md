@@ -10,10 +10,10 @@
 Even this is not essentially a technical decision, I believe that this "simple"
 name probably will drive some other important decisions, like the creation of
 terminologies, naming packages and other stuff, helping defining
-functionalities, etc. According to [1] naming things figures out as one of the
-hardest things in computer science. Apart of a joke, I believe that choose a
-good name is a good success factor, but this is not a technical decision, which
-can make things harder.
+functionalities, etc. According to [Martin Fowler](https://martinfowler.com/bliki/TwoHardThings.html) 
+naming things figures out as one of the hardest things in computer science. 
+Apart of a joke, I believe that choose a good name is a good success factor, 
+but this is not a technical decision, which can make things harder.
 
 ## Decision Drivers
 
@@ -34,7 +34,9 @@ can make things harder.
 
 ## Decision Outcome
 
-Chosen option: "delayer-aws". All the conception and idea behind of this project was made over
+Chosen option: "delayer-aws".
+
+All the conception and idea behind of this project was made over
 the "scheduler" word, which sounds natural, since the main purpose of the project is to *schedule* a
 task to run in the future. However, the term "scheduler" reemsemble a lot of things that already are
 in place, like *recurrence* e *orchestration*. The main objective of this project is to provide a way
@@ -50,10 +52,10 @@ The suffix "-aws" aims to:
 -   confirm that it is not multicloud
 -   confirm that there are plans to build this for other cloud providers
 
-Positive Consequences:
+### Positive Consequences
 *   clearly defines what this project do, and what it will do for the next iteractions
 
-Negative consequences:
+### Negative consequences
 *   not using "scheduler" in the name can reduce the comprehensiveness about the project
 
 ## Pros and Cons of the Options
@@ -87,4 +89,4 @@ makes it different from the other schedulers
 
 ## Links
 
-*   [1]: [Two Hard Things](https://martinfowler.com/bliki/TwoHardThings.html) in computer science
+*   Two Hard Things in computer science: https://martinfowler.com/bliki/TwoHardThings.html
