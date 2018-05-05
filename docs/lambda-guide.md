@@ -16,11 +16,11 @@ Function name should be composed by these parts:
 
 For API related functions, the name should have the following template:
 
-`api`-`method`-`resource`
+`api`-`resource`-`method`
 
 Examples:
-*   api-post-schedule
-*   api-delete-schedule
+*   api-schedule-post
+*   api-schedule-delete
 
 For CloudWatch tasks related functions, the pattern should be:
 
