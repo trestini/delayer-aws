@@ -47,14 +47,15 @@ module.exports = {
       const scheduleTimeframe = timeframePrefix + "-" + timeframeIndex;
 
       const pointInTime = scheduleTime.unix();
-      const purgeAt = pointInTime + (60 * 60 * 24 * 30); // 30 dias
+      const purgeAt = pointInTime + (60 * 60); // 1 hour after scheduled time
 
       let dbobj = {
         /* indexes */
         scheduleTimeframe: scheduleTimeframe,
         scheduleId: scheduleId,
-        pointInTime: scheduleTime.unix(),
+        pointInTime: pointInTime,
         /* /indexes */
+        currentStatus: 'NEW',
         apiKey: apiKey,
         actionConfig: body.action.httpConfig,
         notification: body.notification,
