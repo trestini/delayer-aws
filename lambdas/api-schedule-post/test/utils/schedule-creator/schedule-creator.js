@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*
- * Copyright (c) 2018 delayer-aws
+ * Copyright (c) 2018 delayer-aws (https://github.com/trestini/delayer-aws)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

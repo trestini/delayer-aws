@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 delayer-aws
+ * Copyright (c) 2018 delayer-aws (https://github.com/trestini/delayer-aws)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ module.exports = {
           // inconsistent state, should try to compensate
           logger.warn(`Error on submit message to sqs queue. Rolling back dynamodb status`);
           this.updateStatus(dynamoDb, timeframe, item.scheduleId, "NEW")
-          .then(compOk => {
+          .then(() => {
             // compensation succeeded, return sqs error, state become consistent
             reject({
               errorOn: 'sqsError',
