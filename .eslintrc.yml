@@ -16,6 +16,4 @@ rules:
     - always
   no-var:
     - error
-  no-console:
-    - off
   camelcase: 2
