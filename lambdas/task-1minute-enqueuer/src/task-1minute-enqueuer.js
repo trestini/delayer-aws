@@ -23,6 +23,7 @@ module.exports = {
 
     const { sqs, dynamoDb } = support;
     logger = support.logger;
+    Enqueuer.logger(logger);
 
     const now = moment.utc();
     const fromNow14mins = moment.utc().add(14,'m');
@@ -37,27 +38,32 @@ module.exports = {
       Timeframe.getSchedules(dynamoDb, timeframes.end)
     ])
       .then(queries => {
-        logger.info(JSON.stringify(queries[0]));
-        logger.info(JSON.stringify(queries[1]));
+
         let items = queries[0].Items;
         Array.prototype.push.apply(items, queries[1].Items);
 
-        Promise.all(
-          items.filter(item => {
-            return item.pointInTime > now.unix()
-              && item.pointInTime < fromNow14mins.unix();
-          })
-            .map(item => Enqueuer.sendToQueue(sqs, item))
-        )
-        .then(ok => {
-          logger.info("OK: ", JSON.stringify(ok));
-          response.ok();
-        })
-        .catch(err => {
-          logger.error("OK: ", JSON.stringify(err));
-          response.error(err);
-        });
+        items.filter(item => {
 
+          logger.info(`item.currentStatus: ${item.currentStatus}, item.pointInTime: ${item.pointInTime}, now is: ${now.unix()}, > now? ${item.pointInTime > now.unix()}, < 14mins? ${item.pointInTime < fromNow14mins.unix()}`);
+
+          return item.currentStatus === 'NEW'
+            && item.pointInTime > now.unix()
+            && item.pointInTime < fromNow14mins.unix();
+        })
+          .map(item => {
+            Enqueuer.transition(dynamoDb, sqs, item)
+            .then(() => {
+              logger.info(`Item ${item.scheduleId} transitioned to delayer queue`);
+            })
+            .catch(err => {
+              if( err.compensationError ){
+                // critical error on item - open alert on cloudwatch
+                logger.error(`Compensation error on scheduleId ${item.scheduleId}: ${JSON.stringify(err.compensationError)}`);
+              } else {
+                logger.error(`Fail to transition schedule do delayer queue: ${err.errorOn} : ${err[err.errorOn]}`);
+              }
+            });
+          });
       })
       .catch(err => {
         logger.error(err);
