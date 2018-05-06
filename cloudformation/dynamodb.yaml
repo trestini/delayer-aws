@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  scheduleTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: "schedule"
+      AttributeDefinitions:
+        - AttributeName: "scheduleTimeframe"
+          AttributeType: "S"
+        - AttributeName: "scheduleId"
+          AttributeType: "S"
+        - AttributeName: "pointInTime"
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: "scheduleTimeframe"
+          KeyType: "HASH"
+        - AttributeName: "scheduleId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+
+      GlobalSecondaryIndexes:
+        - IndexName: "scheduleId-pointInTime-index"
+          KeySchema:
+            - AttributeName: "scheduleId"
+              KeyType: "HASH"
+            - AttributeName: "pointInTime"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "1"
+            WriteCapacityUnits: "1"
