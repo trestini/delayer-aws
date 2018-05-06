@@ -15,6 +15,9 @@
 const moment = require('moment');
 let logger;
 
+const Enqueuer = require('./enqueuer');
+const Timeframe = require('./timeframe');
+
 module.exports = {
   start(request, response, support){
 
@@ -25,13 +28,13 @@ module.exports = {
     const fromNow14mins = moment.utc().add(14,'m');
 
     const timeframes = {
-      ini: Utils.timeframe(now),
-      end: Utils.timeframe(fromNow14mins)
+      ini: Timeframe.fromTimestamp(now),
+      end: Timeframe.fromTimestamp(fromNow14mins)
     };
 
     Promise.all([
-      Utils.queryTimeframe(dynamoDb, timeframes.ini),
-      Utils.queryTimeframe(dynamoDb, timeframes.end)
+      Timeframe.getSchedules(dynamoDb, timeframes.ini),
+      Timeframe.getSchedules(dynamoDb, timeframes.end)
     ])
       .then(queries => {
         logger.info(JSON.stringify(queries[0]));
@@ -63,44 +66,4 @@ module.exports = {
 
   }
 
-};
-
-const Utils = {
-  timeframe(timestamp){
-    if( !moment.isMoment(timestamp) ){
-      throw "moment.js date required";
-    }
-    const timeframePrefixIni = timestamp.format('YYYY-MM-DD_HH');
-    const timeframeIndexIni = parseInt(timestamp.minute() / 15);
-
-    const ret = `${timeframePrefixIni}-${timeframeIndexIni}`;
-    return ret;
-  },
-
-  queryTimeframe(dynamoDb, timeframe){
-    let params = {
-      TableName : "schedule",
-      KeyConditionExpression: "scheduleTimeframe = :param",
-      ExpressionAttributeValues: {
-        ":param": timeframe
-      }
-    };
-
-    return dynamoDb.query(params).promise();
-  }
-};
-
-const Enqueuer = {
-  sendToQueue(sqs, item){
-    const delay = (item.pointInTime - moment.utc().unix());
-    console.log(`Publishing message id [${item.scheduleId}] ${delay}s of delay time`);
-
-    const params = {
-      MessageBody: JSON.stringify(item),
-      QueueUrl: 'https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks',
-      DelaySeconds: delay
-    };
-
-    return sqs.sendMessage(params).promise();
-  }
 };
