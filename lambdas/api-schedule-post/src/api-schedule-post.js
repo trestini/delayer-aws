@@ -35,7 +35,7 @@ module.exports = {
         scheduleTime = schedule.scheduleTimeFromEvent(body.schedule);
       } catch (e) {
         logger.warn(e);
-        response.badRequest(e);
+        response.badRequest({message : e });
         return;
       }
 
@@ -72,8 +72,13 @@ module.exports = {
 
       dynamoDb.put(dynamoRequest, (err) => {
         if (err) {
-          logger.error(err);
-          response.badRequest(err);
+          logger.error(`Failed to add schedule: ${err.message}`);
+
+          if( err.code === 'ProvisionedThroughputExceededException' ){
+            logger.warn("DynamoDB provisioning problem");
+          }
+
+          response.internalServerError({message: "Unable to add a schedule"});
         } else {
           const ret = {
             scheduleId: scheduleId,
@@ -86,7 +91,7 @@ module.exports = {
 
     } catch (e) {
       logger.error(e);
-      response.internalServerError(e);
+      response.internalServerError({ message : e });
     }
 
   }
