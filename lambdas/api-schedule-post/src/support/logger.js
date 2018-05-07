@@ -27,7 +27,7 @@ module.exports = {
   },
 
   _logToConsole(level, msg){
-    console.log(`[${level}] ${msg}`);
+    console.log(`[${level}] ${msg}`); // eslint-disable-line no-console
   }
 
 };

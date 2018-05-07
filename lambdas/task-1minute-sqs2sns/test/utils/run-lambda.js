@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+ /*eslint no-console:0*/
 const index = require('../../src/index');
 
 const event = {}, context = {};
