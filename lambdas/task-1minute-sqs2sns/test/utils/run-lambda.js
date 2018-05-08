@@ -12,16 +12,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
- /*eslint no-console:0*/
+/*eslint no-console:0*/
 const index = require('../../src/index');
 
-const event = {}, context = {};
+const event = {};
+
+const timeout = 60000;
+const start = new Date().getTime();
+
+const context = {
+  getRemainingTimeInMillis(){
+    const now = new Date().getTime();
+    console.log("Remaining: ", timeout - (now - start));
+    return timeout - (now - start);
+  }
+};
 
 index.handler(event, context, (err, out) => {
   console.log(">>>>>>> END");
   console.log(">>>>>>> err: ", err);
   console.log(">>>>>>> out: ", out);
-  process.exit(err ? 1 : 0);
+  process.exit( err ? 1 : 0 );
 });
