@@ -12,63 +12,45 @@
  * limitations under the License.
 */
 
-const moment = require('moment');
-let logger;
+const POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
+const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks";
 
-const Enqueuer = require('./enqueuer');
-const Timeframe = require('./timeframe');
+const Poller = require('./poller');
 
 module.exports = {
   start(request, response, support){
 
-    const { sqs, dynamoDb } = support;
-    logger = support.logger;
-    Enqueuer.logger(logger);
+    const { logger, sqs } = support;
 
-    const now = moment.utc();
-    const fromNow14mins = moment.utc().add(14,'m');
+    Poller.logger(logger);
 
-    const timeframes = {
-      ini: Timeframe.fromTimestamp(now),
-      end: Timeframe.fromTimestamp(fromNow14mins)
+    const shouldKeepRunning = () => {
+      const remaining = request.getRemainingTimeInMillis();
+      const pollingTime = POLLING_TIME_IN_SECS * 1000;
+
+      return (remaining - pollingTime) > 2000;
     };
 
-    Promise.all([
-      Timeframe.getSchedules(dynamoDb, timeframes.ini),
-      Timeframe.getSchedules(dynamoDb, timeframes.end)
-    ])
-      .then(queries => {
+    const tryRun = (hnd) => {
+      if( shouldKeepRunning() ){
+        Poller.pollForMessages(sqs, QUEUE_URL, POLLING_TIME_IN_SECS).then(hnd);
+      }
+    };
 
-        let items = queries[0].Items;
-        Array.prototype.push.apply(items, queries[1].Items);
+    const msgHandler = (messages) => {
+      if( messages.length > 0 ) {
+        Promise.all(messages.map(msg => Poller.processMessage(sqs, msg)))
+          .then(results => {
+            logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
+            tryRun(msgHandler);
+          })
+          .catch(err => response.error(err));
+      } else {
+        tryRun(msgHandler);
+      }
+    };
 
-        items.filter(item => {
-
-          logger.info(`item.currentStatus: ${item.currentStatus}, item.pointInTime: ${item.pointInTime}, now is: ${now.unix()}, > now? ${item.pointInTime > now.unix()}, < 14mins? ${item.pointInTime < fromNow14mins.unix()}`);
-
-          return item.currentStatus === 'NEW'
-            && item.pointInTime > now.unix()
-            && item.pointInTime < fromNow14mins.unix();
-        })
-          .map(item => {
-            Enqueuer.transition(dynamoDb, sqs, item)
-            .then(() => {
-              logger.info(`Item ${item.scheduleId} transitioned to delayer queue`);
-            })
-            .catch(err => {
-              if( err.compensationError ){
-                // critical error on item - open alert on cloudwatch
-                logger.error(`Compensation error on scheduleId ${item.scheduleId}: ${JSON.stringify(err.compensationError)}`);
-              } else {
-                logger.error(`Fail to transition schedule do delayer queue: ${err.errorOn} : ${err[err.errorOn]}`);
-              }
-            });
-          });
-      })
-      .catch(err => {
-        logger.error(err);
-        response.error(err);
-      });
+    tryRun(msgHandler);
 
   }
 
