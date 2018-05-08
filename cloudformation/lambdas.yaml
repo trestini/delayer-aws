@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  APISchedulePost:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: api-schedule-post
+      Handler: "index.handler"
+      Role: "arn:aws:iam::472249637553:role/lambda_sqs+_dynamo+_sns+"
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "20"
+
+  Task1MinuteEnqueuer:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: task-1minute-enqueuer
+      Handler: "index.handler"
+      Role: "arn:aws:iam::472249637553:role/lambda_sqs+_dynamo+_sns+"
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "60"
+
+  Task1MinuteSqs2Sns:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: task-1minute-sqs2sns
+      Handler: "index.handler"
+      Role: "arn:aws:iam::472249637553:role/lambda_sqs+_dynamo+_sns+"
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "60"
+
