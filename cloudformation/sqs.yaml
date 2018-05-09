@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DelayerQueue:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: DelayerQueue
+      ReceiveMessageWaitTimeSeconds: 3
+      VisibilityTimeout: 10
+      MessageRetentionPeriod: 3600
