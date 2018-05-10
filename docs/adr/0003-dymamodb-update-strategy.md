@@ -1,8 +1,8 @@
 # DynamoDB update strategy
 
-*   Status: proposed
+*   Status: accepted
 *   Proposers: trestini
-*   Deciders:
+*   Deciders: trestini
 *   Date: 2018-04-28
 
 ## Context and Problem Statement
