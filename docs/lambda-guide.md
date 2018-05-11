@@ -28,7 +28,7 @@ For CloudWatch tasks related functions, the pattern should be:
 
 Examples:
 *   task-hourly-cleanup-schedules
-*   task-minute-warmer
+*   task-1minute-warmer
 
 For SNS topic functions, the pattern should be:
 
@@ -40,13 +40,13 @@ Examples:
 
 ## File structure
 
-Assuming `task-minute-warmer` as the name of the example lambda, below the file structure 
+Assuming `task-1minute-warmer` as the name of the example lambda, below the file structure 
 
 ```
-task-minute-warmer/
+task-1minute-warmer/
   src/
     index.js
-    task-minute-warmer.js
+    task-1minute-warmer.js
     support/
       logger.js
       api-gateway-request-handler.js
@@ -54,7 +54,7 @@ task-minute-warmer/
   test/
 ```
 
-Except for `task-minute-warmer.js` file, all other files are provided (for now, in a copy/paste basis).
+Except for `task-1minute-warmer.js` file, all other files are provided (for now, in a copy/paste basis).
 
 ## Architecture
 
@@ -63,6 +63,7 @@ Except for `task-minute-warmer.js` file, all other files are provided (for now, 
 The concept behind this sequence is to separate function code from infrastructure code. There's a thin line between them, but there's some helpful tips:
 
 *   `index.js` is the handler of Lambda container, and should take care of instantiation of basic objects (request, response, support). AWS resources should be instantiated here and be put in `support` object;
+*   `simple-request-handler.js` is the simplest request/response handler. It only concentrates `event` and `context` objects into `request`, and provides a way to finish responses with `ok` or `error`. Is used by lambdas that are triggered by Cloudwatch events.
 *   `api-gateway-request-handler.js` is responsible by handle requests from AWS API Gateway when the function is configured as *Lambda Proxy Integration* in API endpoint Integration Request configuration.
 *   `sns-topic-request-handler.js` prepares the request when it comes as an event from a message published in a SNS topic
 *   `logger.js` fancy and clean console.log wrapper. 
