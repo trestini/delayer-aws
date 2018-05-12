@@ -23,7 +23,7 @@ module.exports = {
 
     return {
       ok: () => callback(null),
-      error: (errorMessage) => callback(null, errorMessage)
+      error: (errorMessage) => callback(errorMessage)
     };
 
   }
