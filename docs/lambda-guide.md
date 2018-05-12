@@ -32,11 +32,16 @@ Examples:
 
 For SNS topic functions, the pattern should be:
 
-`sns`-`topic_name`-`name`
+`sns`-`type`-`name`
+
+Where `type` must be:
+*   `action` for delayer action invokers
+*   `event` for event processors
 
 Examples:
-*   sns-placed_tasks-action-invoker
-*   sns-schedule_created-kinesis-stream
+*   sns-action-httpinvoker
+*   sns-action-sqssender
+*   sns-event-kinesis-stream
 
 ## File structure
 
