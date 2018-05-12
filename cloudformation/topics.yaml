@@ -1,32 +1,34 @@
 AWSTemplateFormatVersion: "2010-09-09"
+
 Resources:
-  ScheduleCreated:
+  ScheduleCreatedEvent:
     Type: "AWS::SNS::Topic"
     Properties:
-      TopicName: "ScheduleCreated"
+      TopicName: "DELAYER_EVENT_schedule-created"
       DisplayName: Schedule registration event topic
-  ScheduleRemoved:
+  ScheduleCancelledEvent:
     Type: "AWS::SNS::Topic"
     Properties:
-      TopicName: "ScheduleRemoved"
+      TopicName: "DELAYER_EVENT_schedule-cancelled"
       DisplayName: Cancel schedule event topic
-  ScheduleSentToDelayed:
+  ScheduleInWaitQueueEvent:
     Type: "AWS::SNS::Topic"
     Properties:
-      TopicName: "ScheduleSentToDelayed"
-      DisplayName: Schedule sent to DelayerQueue
+      TopicName: "DELAYER_EVENT_schedule-waiting"
+      DisplayName: Schedule sent to DELAYER_wait-queue
+  ActionFinishedEvent:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_EVENT_action-finished"
+      DisplayName: Action Finalized event
+
   HTTPAction:
     Type: "AWS::SNS::Topic"
     Properties:
-      TopicName: "HTTPAction"
+      TopicName: "DELAYER_ACTION_HTTP"
       DisplayName: HTTP Action executor topic
-  SQSAction:
+  SQSSendAction:
     Type: "AWS::SNS::Topic"
     Properties:
-      TopicName: "SQSAction"
+      TopicName: "DELAYER_ACTION_SQS_SEND"
       DisplayName: SQS Message Post Action executor topic
-  ActionFinished:
-    Type: "AWS::SNS::Topic"
-    Properties:
-      TopicName: "ActionFinished"
-      DisplayName: Action Finalized event

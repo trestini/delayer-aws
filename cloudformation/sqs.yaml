@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
-  DelayerQueue:
+  WaitQueue:
     Type: "AWS::SQS::Queue"
     Properties:
-      QueueName: DelayerQueue
+      QueueName: DELAYER_wait-queue
       ReceiveMessageWaitTimeSeconds: 3
       VisibilityTimeout: 10
       MessageRetentionPeriod: 3600
