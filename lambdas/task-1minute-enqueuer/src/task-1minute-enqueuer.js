@@ -39,8 +39,15 @@ module.exports = {
     ])
       .then(queries => {
 
-        let items = queries[0].Items;
-        Array.prototype.push.apply(items, queries[1].Items);
+        let dedupObj = {};
+
+        queries.forEach(q => {
+          q.Items.forEach(e => {
+            dedupObj[e.scheduleId] = e;
+          });
+        });
+
+        const items = Object.keys(dedupObj).map(k => dedupObj[k]);
 
         items.filter(item => {
 
