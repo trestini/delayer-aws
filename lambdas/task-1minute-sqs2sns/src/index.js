@@ -27,7 +27,8 @@ exports.handler = (event, context, callback) => {
   const response = handler.response(callback);
   const support = {
     logger: logger,
-    sqs: new AWS.SQS()
+    sqs: new AWS.SQS(),
+    sns: new AWS.SNS()
   };
 
   try {

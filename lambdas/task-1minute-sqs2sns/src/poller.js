@@ -14,6 +14,9 @@
 
 const moment = require('moment');
 
+const TOPIC_ARN = "arn:aws:sns:us-east-1:472249637553:DELAYER_ACTION_HTTP";
+const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/DELAYER_wait-queue";
+
 let logger;
 
 const Poller = {
@@ -22,10 +25,10 @@ const Poller = {
     logger = _logger;
   },
 
-  pollForMessages(sqs, queueUrl, pollingTime){
+  pollForMessages(sqs, pollingTime){
     logger.info(`Polling for ${pollingTime}s for messages`);
     const params = {
-      QueueUrl: queueUrl,
+      QueueUrl: QUEUE_URL,
       WaitTimeSeconds: pollingTime,
       MaxNumberOfMessages: 10
     };
@@ -44,26 +47,32 @@ const Poller = {
 
   processMessage(sns, sqs, sqsMessage){
 
-    // console.log("Processando msg: ", sqsMessage);
+    return new Promise( (resolve, reject) => {
 
-    const msg = JSON.parse(sqsMessage.Body);
-    const now = moment.utc();
+      try {
 
-    //console.log(`now: ${now.format()} / ${now.unix()} -> scheduled: ${scheduledTime.format()} / ${scheduledTime.unix().utc()} => ${msg.pointInTime}`);
+        logger.info("Processando msg: ", sqsMessage);
+        const msg = JSON.parse(sqsMessage.Body);
+        const now = moment.utc();
 
-    const drift = now.unix() - parseInt(msg.pointInTime);
+        //console.log(`now: ${now.format()} / ${now.unix()} -> scheduled: ${scheduledTime.format()} / ${scheduledTime.unix().utc()} => ${msg.pointInTime}`);
 
-    logger.info(`Drift on ${msg.scheduleId}: ${drift} secs`);
+        const drift = now.unix() - parseInt(msg.pointInTime);
 
-    Poller.publishOnTopic(sns, TOPIC_ARN, sqsMessage.Body)
-      .then( () => {
-        // Poller.deleteMessage(QUEUE_URL, sqsMessage);
-        return { result: sqsMessage };
-      } )
-      .catch( err => {
-        logger.error("errors do promise all: ", err);
-        return { error: sqsMessage };
-      } );
+        logger.info(`Drift on ${msg.scheduleId}: ${drift} secs`);
+
+        Poller.publishOnTopic(sns, TOPIC_ARN, sqsMessage.Body)
+          .then( () => {
+            Poller.deleteMessage(sqs, QUEUE_URL, sqsMessage);
+            resolve({ result: sqsMessage });
+          } )
+          .catch( err => {
+            reject({ error: sqsMessage, err: err });
+          } );
+      } catch(e) {
+        reject(e);
+      }
+    });
 
   },
 

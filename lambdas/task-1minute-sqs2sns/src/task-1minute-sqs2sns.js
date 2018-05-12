@@ -13,14 +13,13 @@
 */
 
 const POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
-const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks";
 
 const Poller = require('./poller');
 
 module.exports = {
   start(request, response, support){
 
-    const { logger, sqs } = support;
+    const { logger, sqs, sns } = support;
 
     Poller.logger(logger);
 
@@ -33,13 +32,19 @@ module.exports = {
 
     const tryRun = (hnd) => {
       if( shouldKeepRunning() ){
-        Poller.pollForMessages(sqs, QUEUE_URL, POLLING_TIME_IN_SECS).then(hnd);
+        Poller.pollForMessages(sqs, POLLING_TIME_IN_SECS)
+          .then(hnd)
+          .catch(error => {
+            const errorMsg = `Poll for message failed: ${JSON.stringify(error)}`;
+            logger.error(errorMsg);
+            response.error(errorMsg);
+          });
       }
     };
 
     const msgHandler = (messages) => {
       if( messages.length > 0 ) {
-        Promise.all(messages.map(msg => Poller.processMessage(sqs, msg)))
+        Promise.all(messages.map(msg => Poller.processMessage(sns, sqs, msg)))
           .then(results => {
             logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
             tryRun(msgHandler);
