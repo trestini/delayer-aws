@@ -46,7 +46,7 @@ module.exports = {
       if( messages.length > 0 ) {
         Promise.all(messages.map(msg => Poller.processMessage(sns, sqs, msg)))
           .then(results => {
-            logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
+            // logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
             tryRun(msgHandler);
           })
           .catch(err => response.error(err));

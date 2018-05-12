@@ -80,6 +80,7 @@ The concept behind this sequence is to separate function code from infrastructur
 *   [The silece of the Lambdas – 5 Anti-patterns for AWS Lambda](https://www.3pillarglobal.com/insights/silence-lambdas-5-anti-patterns-aws-lambda)
 *   [Best Practices for Working with AWS Lambda Functions](https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html)
 *   www.websequenciediagrams.com source of the architecture diagram
+
 ```
 title Lambda execution sequence
 

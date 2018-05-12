@@ -26,7 +26,7 @@ const Poller = {
   },
 
   pollForMessages(sqs, pollingTime){
-    logger.info(`Polling for ${pollingTime}s for messages`);
+    // logger.info(`Polling for ${pollingTime}s for messages`);
     const params = {
       QueueUrl: QUEUE_URL,
       WaitTimeSeconds: pollingTime,
@@ -51,7 +51,6 @@ const Poller = {
 
       try {
 
-        logger.info("Processando msg: ", sqsMessage);
         const msg = JSON.parse(sqsMessage.Body);
         const now = moment.utc();
 
@@ -59,7 +58,7 @@ const Poller = {
 
         const drift = now.unix() - parseInt(msg.pointInTime);
 
-        logger.info(`Drift on ${msg.scheduleId}: ${drift} secs`);
+        logger.info(`Processed ${msg.scheduleId} with drift of ${drift} secs`);
 
         Poller.publishOnTopic(sns, TOPIC_ARN, sqsMessage.Body)
           .then( () => {
