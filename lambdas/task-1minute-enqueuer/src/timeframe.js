@@ -30,7 +30,6 @@ module.exports = {
     let params = {
       TableName : "schedule",
       KeyConditionExpression: "scheduleTimeframe = :param",
-      ProjectionExpression: "currentStatus, pointInTime, scheduleId",
       ExpressionAttributeValues: {
         ":param": timeframe
       }

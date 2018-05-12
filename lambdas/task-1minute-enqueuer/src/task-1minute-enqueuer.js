@@ -44,7 +44,7 @@ module.exports = {
 
         items.filter(item => {
 
-          logger.info(`item.currentStatus: ${item.currentStatus}, item.pointInTime: ${item.pointInTime}, now is: ${now.unix()}, > now? ${item.pointInTime > now.unix()}, < 14mins? ${item.pointInTime < fromNow14mins.unix()}`);
+          logger.info(`item.scheduleId: ${item.scheduleId}, item.currentStatus: ${item.currentStatus}, item.pointInTime: ${item.pointInTime}, now is: ${now.unix()}, is future? ${item.pointInTime > now.unix()}, < 14mins? ${item.pointInTime < fromNow14mins.unix()}`);
 
           return item.currentStatus === 'NEW'
             && item.pointInTime > now.unix()

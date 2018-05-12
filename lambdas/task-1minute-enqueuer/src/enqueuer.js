@@ -15,6 +15,8 @@
 const moment = require('moment');
 const Timeframe = require('./timeframe');
 
+const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/DELAYER_wait-queue";
+
 let logger;
 
 module.exports = {
@@ -68,6 +70,7 @@ module.exports = {
           this.updateStatus(dynamoDb, timeframe, item.scheduleId, "NEW")
           .then(() => {
             // compensation succeeded, return sqs error, state become consistent
+            logger.info(`Rollback of item ${item.scheduleId} succeeded`);
             reject({
               errorOn: 'sqsError',
               sqsError: sqsError
@@ -114,7 +117,7 @@ module.exports = {
 
     const params = {
       MessageBody: JSON.stringify(item),
-      QueueUrl: 'https://sqs.us-east-1.amazonaws.com/472249637553/warm-tasks',
+      QueueUrl: QUEUE_URL,
       DelaySeconds: delay
     };
 
