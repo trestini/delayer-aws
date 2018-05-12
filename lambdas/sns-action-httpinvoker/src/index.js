@@ -22,18 +22,26 @@ AWS.config.update({
 
 exports.handler = (event, context, callback) => {
 
-  let handler = require('./support/simple-request-handler');
-  const request = handler.request(event, context);
-  const response = handler.response(callback);
-  const support = {
-    logger: logger
-  };
-
   try {
-    lambda.start(request, response, support);
+    let handler = require('./support/sns-topic-request-handler');
+    const request = handler.request(event, context);
+    const response = handler.response(callback);
+    const support = {
+      logger: logger
+    };
+
+    try {
+      lambda.start(request, response, support);
+    } catch (e) {
+      logger.error(`Unexpected error on lambda execution: ${JSON.stringify(e)}`);
+      callback(e);
+      return;
+    }
+
   } catch (e) {
-    logger.error(`Unexpected error: ${JSON.stringify(e)}`);
+    logger.error(`Unexpected error on lambda execution setup: ${JSON.stringify(e)}`);
     callback(e);
+    return;
   }
 
 };

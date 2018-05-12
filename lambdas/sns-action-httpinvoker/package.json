@@ -9,6 +9,7 @@
   "dependencies": {
     "aws-sdk": "^2.230.1",
     "moment": "^2.22.1",
+    "request": "^2.85.0",
     "shortid": "^2.2.8"
   },
   "devDependencies": {
