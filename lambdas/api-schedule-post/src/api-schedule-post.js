@@ -13,7 +13,6 @@
 */
 
 const moment = require('moment');
-const shortid = require('shortid');
 
 const schedule = require('./schedule');
 
@@ -23,7 +22,7 @@ module.exports = {
     const { logger, dynamoDb } = support;
 
     const apiKey = request.requestContext.identity.apiKey;
-    const scheduleId = shortid.generate();
+    const scheduleId = request.awsRequestId;
 
     const body = request.body;
 
@@ -38,8 +37,6 @@ module.exports = {
         response.badRequest({message : e });
         return;
       }
-
-      logger.info(`Schedule will be created in ${scheduleTime}`);
 
       const timeframePrefix = scheduleTime.format('YYYY-MM-DD_HH');
       const timeframeIndex = parseInt(scheduleTime.minute() / 15);
@@ -85,6 +82,7 @@ module.exports = {
             scheduleId: scheduleId,
             pointInTime: scheduleTime.format()
           };
+          logger.info(`Schedule created with: ${JSON.stringify(ret)}. Returning code 201`);
 
           response.created(ret);
         }
