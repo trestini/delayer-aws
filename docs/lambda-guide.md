@@ -43,6 +43,16 @@ Examples:
 *   sns-action-sqssender
 *   sns-event-kinesis-stream
 
+For Streaming data, the pattern must be:
+
+`stream`-`source`-`name`
+
+Where `source` is the data source of the streaming data.
+
+Examples:
+*   stream-dynamodb-enqueuer
+*   stream-kinesis-usage_data
+
 ## File structure
 
 Assuming `task-1minute-warmer` as the name of the example lambda, below the file structure 
