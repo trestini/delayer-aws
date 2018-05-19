@@ -54,16 +54,11 @@ module.exports = {
         if( streamType === 'INSERT' ){
           logger.info("I'll remove this to stream it");
 
-          const scheduleTimeframe = record.dynamodb.Keys.scheduleTimeframe.S;
-          const scheduleId = record.dynamodb.Keys.scheduleId.S;
-
-          logger.info(`timeframe: ${scheduleTimeframe}, id: ${scheduleId}`);
-
           const params = {
             TableName: "schedule",
             Key:{
-              "scheduleTimeframe": scheduleTimeframe,
-              "scheduleId": scheduleId
+              "scheduleId": image.scheduleId,
+              "pointInTime": image.pointInTime
             },
           };
 
