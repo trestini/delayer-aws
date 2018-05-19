@@ -13,6 +13,7 @@
 */
 
 const moment = require('moment');
+const Enqueuer = require('./enqueuer');
 
 const eventNameMapping = {
   'INSERT' : 'NewImage',
@@ -22,11 +23,27 @@ const eventNameMapping = {
 module.exports = {
   start(request, response, support){
 
-    const { logger, sqs, dynamoDb } = support;
+    const { logger, sqs, dynamoDb, converter } = support;
+
+    Enqueuer.logger(logger);
 
     request.Records.forEach(record => {
-      const image = record[eventNameMapping[record.eventName]];
-      const pointInTime = moment.utc(image.pointInTime);
+
+      logger.info(`Now processing: \n${JSON.stringify(record, null, 2)}`);
+
+      logger.info(`eventName: ${record.eventName}, mapped: ${eventNameMapping[record.eventName]}`);
+
+      const aux = record.dynamodb[eventNameMapping[record.eventName]];
+
+      logger.info(`image raw: ${JSON.stringify(aux, null, 2)}`);
+
+      const image = converter.unmarshall(aux);
+
+      logger.info(`image unmarshalled: ${JSON.stringify(image, null, 2)}`);
+
+      const pointInTime = moment.unix(image.pointInTime);
+
+      logger.info(`pointInTime: ${pointInTime}`);
 
       logger.info(`Fast track: ${isFastTrack(pointInTime)}`);
 
@@ -59,7 +76,9 @@ module.exports = {
 
         } else if ( streamType === 'REMOVE' ){
           logger.info("Time do party! Inserting on SQS queue");
-          logger.infor(`Event to be enqueued: ${JSON.stringify(record, null, 2)}`);
+          logger.info(`Event to be enqueued: ${JSON.stringify(image, null, 2)}`);
+
+          Enqueuer.sendToQueue(sqs, image);
         }
       }
 

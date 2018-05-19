@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-const lambda = require('./task-1minute-enqueuer');
+const lambda = require('./stream-dynamodb-fasttrack_enqueuer');
 const logger = require('./support/logger');
 
 const AWS = require('aws-sdk');
@@ -28,7 +28,8 @@ exports.handler = (event, context, callback) => {
   const support = {
     logger: logger,
     sqs: new AWS.SQS(),
-    dynamoDb: new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'})
+    dynamoDb: new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'}),
+    converter: AWS.DynamoDB.Converter
   };
 
   try {
