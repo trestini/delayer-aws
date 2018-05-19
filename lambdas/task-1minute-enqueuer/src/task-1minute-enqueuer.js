@@ -13,76 +13,57 @@
 */
 
 const moment = require('moment');
-const Timeframe = require('./timeframe');
 
 module.exports = {
   start(request, response, support){
 
     const { logger, dynamoDb } = support;
 
-    const now = moment.utc();
-    const fromNow14mins = moment.utc().add(14,'m');
+    const now = moment.utc().unix();
+    const fromNow14mins = moment.utc().add(14,'m').unix();
 
-    const timeframes = {
-      ini: Timeframe.fromTimestamp(now),
-      end: Timeframe.fromTimestamp(fromNow14mins)
+    const params = {
+      TableName: "schedule",
+      FilterExpression: "#pit between :now and :in14mins",
+      ExpressionAttributeNames: {
+        "#pit": "pointInTime",
+      },
+      ExpressionAttributeValues: {
+        ":now": now,
+        ":in14mins": fromNow14mins
+      }
     };
 
-    Promise.all([
-      Timeframe.getSchedules(dynamoDb, timeframes.ini),
-      Timeframe.getSchedules(dynamoDb, timeframes.end)
-    ])
-      .then(queries => {
-
-        let dedupObj = {};
-
-        queries.forEach(q => {
-          q.Items.forEach(e => {
-            dedupObj[e.scheduleId] = e;
-          });
-        });
-
-        const items = Object.keys(dedupObj).map(k => dedupObj[k]);
-
-        items
-        .filter(item => {
-          logger.info(`item.scheduleId: ${item.scheduleId}, item.currentStatus: ${item.currentStatus}, item.pointInTime: ${item.pointInTime}, now is: ${now.unix()}, is future? ${item.pointInTime > now.unix()}, < 14mins? ${item.pointInTime < fromNow14mins.unix()}`);
-
-          return item.pointInTime > now.unix()
-            && item.pointInTime < fromNow14mins.unix();
+    const scanHandler = (err, result) => {
+      if( !err ){
+        Promise.all(result.Items.map(item => {
+          const params = {
+            TableName: "schedule",
+            Key:{
+              "scheduleId": item.scheduleId,
+              "pointInTime": item.pointInTime
+            },
+            ReturnValues: "NONE"
+          };
+          return dynamoDb.delete(params).promise();
+        }))
+        .then(() => {
+          if (typeof result.LastEvaluatedKey != "undefined") {
+            logger.info("Scanning for more...");
+            params.ExclusiveStartKey = result.LastEvaluatedKey;
+            dynamoDb.scan(params, scanHandler);
+          }
         })
-        .forEach(item => {
-          const timeframe = Timeframe.fromTimestamp(moment.unix(item.pointInTime).utc());
-          deleteItem(dynamoDb, timeframe, item.scheduleId)
-          .then(() => {
-            logger.info(`Item ${item.scheduleId} transitioned to delayer queue`);
-            response.ok();
-          })
-          .catch(err => {
-            logger.error(`Item ${item.scheduleId} could not be deleted`);
-            response.error(err);
-          });
+        .catch(err => {
+          logger.error(`Scan failed: ${err}`);
         });
-      })
-      .catch(err => {
-        logger.error(err);
-        response.error(err);
-      });
+      } else {
+        logger.error(`Scan failed: ${err}`);
+      }
+    };
+
+    dynamoDb.scan(params, scanHandler);
 
   }
 
 };
-
-function deleteItem(dynamoDb, timeframe, scheduleId){
-  const params = {
-    TableName: "schedule",
-    IndexName: "scheduleId-pointInTime-index",
-    Key:{
-      "scheduleTimeframe": timeframe,
-      "scheduleId": scheduleId
-    },
-    ReturnValues: "ALL_OLD"
-  };
-
-  return dynamoDb.delete(params).promise();
-}
