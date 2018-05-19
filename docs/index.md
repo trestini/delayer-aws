@@ -10,5 +10,6 @@ The delayer-aws' core values are:
 ## Architecture overview
 
 *   [Lambda Guidelines](lambda-guide.md)
+*   [Glossary](glossary.md)
 *   [Architectural Decision Logs](adr/)
 
