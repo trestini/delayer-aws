@@ -51,7 +51,6 @@ module.exports = {
         scheduleId: scheduleId,
         pointInTime: pointInTime,
         /* /indexes */
-        currentStatus: 'NEW',
         apiKey: apiKey,
         actionConfig: body.action.httpConfig,
         notification: body.notification,
