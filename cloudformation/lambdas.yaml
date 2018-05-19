@@ -22,7 +22,8 @@ Resources:
         ZipFile: !Sub |
           exports.handler = (e,c,cb) => { cb(null); };
       Runtime: "nodejs6.10"
-      Timeout: "60"
+      Timeout: "300"
+      MemorySize: 256
 
   Task1MinuteSqs2Sns:
     Type: "AWS::Lambda::Function"
@@ -34,5 +35,16 @@ Resources:
         ZipFile: !Sub |
           exports.handler = (e,c,cb) => { cb(null); };
       Runtime: "nodejs6.10"
-      Timeout: "60"
+      Timeout: "300"
 
+  StreamFastTrack:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: stream-dynamodb-fasttrack_enqueuer
+      Handler: "index.handler"
+      Role: "arn:aws:iam::472249637553:role/lambda_sqs+_dynamo+_sns+"
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "60"
