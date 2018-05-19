@@ -13,19 +13,20 @@
 */
 
 const moment = require('moment');
-const Enqueuer = require('./enqueuer');
+let logger;
 
 const eventNameMapping = {
   'INSERT' : 'NewImage',
   'REMOVE' : 'OldImage'
 };
 
+const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/DELAYER_wait-queue";
+
 module.exports = {
   start(request, response, support){
 
-    const { logger, sqs, dynamoDb, converter } = support;
-
-    Enqueuer.logger(logger);
+    const { sqs, dynamoDb, converter } = support;
+    logger = support.logger;
 
     request.Records.forEach(record => {
 
@@ -78,7 +79,7 @@ module.exports = {
           logger.info("Time do party! Inserting on SQS queue");
           logger.info(`Event to be enqueued: ${JSON.stringify(image, null, 2)}`);
 
-          Enqueuer.sendToQueue(sqs, image);
+          sendToQueue(sqs, image);
         }
       }
 
@@ -95,4 +96,17 @@ function isFastTrack(pointInTime){
   const pit = pointInTime.unix();
 
   return pit >= now && pit <= daquiA14Mins;
+}
+
+function sendToQueue(sqs, item){
+  const delay = (item.pointInTime - moment.utc().unix());
+  logger.info(`Publishing message id [${item.scheduleId}] ${delay}s of delay time`);
+
+  const params = {
+    MessageBody: JSON.stringify(item),
+    QueueUrl: QUEUE_URL,
+    DelaySeconds: delay
+  };
+
+  return sqs.sendMessage(params).promise();
 }
