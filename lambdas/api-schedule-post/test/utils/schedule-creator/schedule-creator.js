@@ -48,6 +48,7 @@ const mountBody = (time) => {
       }
     }
   };
+
   body.schedule.pointInTime = time;
   // console.log(`Returning body with time: ${aux.schedule.pointInTime}`);
   return body;
@@ -60,13 +61,13 @@ const equally = concentracao / qtd;
 let current = ini,
   list = [];
 for (let i = 0; i < qtd; i++) {
-  console.log(`${i}: ${current}`);
+  //console.log(`${i}: ${current}`);
   list.push(moment(current));
   current.add(equally, 's');
 }
 
 list.map(mountBody).forEach(e => {
-  console.log(`time: ${e.schedule.pointInTime}, url: ${e.action.httpConfig.url}`);
+  // console.log(`time: ${e.schedule.pointInTime}, url: ${e.action.httpConfig.url}`);
   request.post({
     url: 'https://sdzp92wil0.execute-api.us-east-1.amazonaws.com/dev/schedule',
     method: 'POST',
@@ -75,9 +76,9 @@ list.map(mountBody).forEach(e => {
     body: e
   }, (error, response, body) => {
     if (error) {
-      console.error("=( ", error);
+      console.error("ERR ", error);
     } else {
-      console.log("=) ", body);
+      console.log(`OK  ${body.scheduleId};${body.pointInTime}`);
     }
   });
 
