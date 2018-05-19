@@ -9,7 +9,10 @@ This log lists the architectural decisions for delayer-aws.
 - [ADR-0002](0002-recursive-lambda-or-triggered-lambda.md) - Recursive lambda or CloudWatch-triggered lambda
 - [ADR-0003](0003-dymamodb-update-strategy.md) - DynamoDB update strategy
 - [ADR-0004](0004-use-log-framework-for-logging.md) - Use of a logging framework
+- [ADR-0005](0005-use-of-dynamodb-streams-for-enqueuer.md) - Use of DynamoDB streams for *enqueuer*
 
 <!-- adrlogstop -->
+
+
 
 
