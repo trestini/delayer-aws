@@ -14,7 +14,7 @@
 
 const moment = require('moment');
 
-const schedule = require('./schedule');
+const Schedule = require('./schedule');
 
 module.exports = {
   start(request, response, support){
@@ -31,7 +31,7 @@ module.exports = {
       let scheduleTime = undefined;
 
       try{
-        scheduleTime = schedule.scheduleTimeFromEvent(body.schedule);
+        scheduleTime = Schedule.scheduleTimeFromEvent(body.schedule);
       } catch (e) {
         logger.warn(e);
         response.badRequest({message : e });
@@ -44,7 +44,6 @@ module.exports = {
       const scheduleTimeframe = timeframePrefix + "-" + timeframeIndex;
 
       const pointInTime = scheduleTime.unix();
-      const purgeAt = pointInTime + (60 * 60); // 1 hour after scheduled time
 
       let dbobj = {
         /* indexes */
@@ -57,8 +56,7 @@ module.exports = {
         actionConfig: body.action.httpConfig,
         notification: body.notification,
         context: body.context,
-        createdOn: moment.utc().unix(),
-        purgeAt: purgeAt
+        createdOn: moment.utc().unix()
       };
 
       // console.log("Sending object to dynamodb:\n", JSON.stringify(dbobj, null, 2));
