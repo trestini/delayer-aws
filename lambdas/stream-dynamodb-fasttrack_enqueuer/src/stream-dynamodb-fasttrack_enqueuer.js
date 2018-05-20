@@ -13,7 +13,7 @@
 */
 
 const moment = require('moment');
-let logger;
+let logger, dynamoDb, sqs;
 
 const eventNameMapping = {
   'INSERT' : 'NewImage',
@@ -25,80 +25,44 @@ const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/DELAYER_wait
 module.exports = {
   start(request, response, support){
 
-    const { sqs, dynamoDb, converter } = support;
+    const { converter } = support;
     logger = support.logger;
+    dynamoDb = support.dynamoDb;
+    sqs = support.sqs;
 
     logger.info(`Starting ingestion of ${request.Records.length} records`);
 
     request.Records.forEach(record => {
-
-      // logger.info(`Now processing: \n${JSON.stringify(record, null, 2)}`);
-
-      // logger.info(`eventName: ${record.eventName}, mapped: ${eventNameMapping[record.eventName]}`);
-
       const aux = record.dynamodb[eventNameMapping[record.eventName]];
-
-      // logger.info(`image raw: ${JSON.stringify(aux, null, 2)}`);
-
       const image = converter.unmarshall(aux);
-
-      // logger.info(`image unmarshalled: ${JSON.stringify(image, null, 2)}`);
-
       const pointInTime = moment.unix(image.pointInTime);
 
-      // logger.info(`pointInTime: ${pointInTime}`);
-
-      let logMsg = `eventID: ${record.eventID}, eventName: ${record.eventName}, mapped: ${eventNameMapping[record.eventName]}`;
-
-      if( record.eventName === 'INSERT' ){
-        logMsg += `, Fast track: ${isFastTrack(pointInTime)}`;
-      }
-
-      logger.info(logMsg);
+      logger.info(`eventName: ${record.eventName}, In delayer zone: ${isInDelayerQueueZone(pointInTime)}, eventID: ${record.eventID}, mapped: ${eventNameMapping[record.eventName]}`);
 
       const streamType = record.eventName;
 
-      if( isFastTrack(pointInTime) ){
+      if( isInDelayerQueueZone(pointInTime) ){
         if( streamType === 'INSERT' ){
-          // logger.info("I'll remove this to stream it");
-
-          const params = {
-            TableName: "schedule",
-            Key:{
-              "scheduleId": image.scheduleId,
-              "pointInTime": image.pointInTime
-            },
-          };
-
-          dynamoDb.delete(params).promise()
-          .then(() => {
-            response.ok();
-          })
-          .catch(err => {
-            response.error("oh nooo: " + JSON.stringify(err));
-          });
-
+          addDeleteOperation(image.scheduleId, image.pointInTime);
         } else if ( streamType === 'REMOVE' ){
-          // logger.info("Time do party! Inserting on SQS queue");
-          // logger.info(`Event to be enqueued: ${JSON.stringify(image, null, 2)}`);
-
           sendToQueue(sqs, image);
         }
       }
 
     });
 
+    flushDeleteOperation();
   }
 
 };
 
-function isFastTrack(pointInTime){
-  const daquiA14Mins = moment.utc().add(14, 'm').unix();
+function isInDelayerQueueZone(pointInTime){
+  const within14Mins = moment.utc().add(14, 'm').unix();
   const now = moment.utc().unix();
 
   const pit = pointInTime.unix();
 
-  return pit >= now && pit <= daquiA14Mins;
+  return pit >= now && pit <= within14Mins;
 }
 
 function sendToQueue(sqs, item){
@@ -112,4 +76,45 @@ function sendToQueue(sqs, item){
   };
 
   return sqs.sendMessage(params).promise();
+}
+
+let deleteBuffer = [];
+
+function addDeleteOperation(scheduleId, pointInTime){
+  const params = {
+    DeleteRequest: {
+      Key:{
+        "scheduleId": scheduleId,
+        "pointInTime": pointInTime
+      }
+    }
+  };
+
+  deleteBuffer.push(params);
+  if( deleteBuffer.length == 10 ){
+    flushDeleteOperation();
+  }
+}
+
+function flushDeleteOperation(){
+  let copy = [];
+  deleteBuffer.forEach(i => copy.push(i));
+  deleteBuffer = [];
+
+  const requests = {
+    RequestItems: {
+      'schedule': copy
+    }
+  };
+
+  if( copy.length > 0 ){
+    dynamoDb.batchWrite(requests, (err, ok) => {
+      if( err ){
+        logger.error(`Fudeu: ${JSON.stringify(err)}`);
+      } else {
+        logger.info(`${copy.length} deletes performed: ${JSON.stringify(ok)}`);
+      }
+    });
+  }
+
 }
