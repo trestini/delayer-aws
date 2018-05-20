@@ -52,6 +52,7 @@ module.exports = {
     });
 
     flushDeleteOperation();
+    flushQueue();
   }
 
 };
@@ -65,18 +66,51 @@ function isInDelayerQueueZone(pointInTime){
   return pit >= now && pit <= within14Mins;
 }
 
+// --------------- batch sqs send functions
+
+let sqsBuffer = [];
+
 function sendToQueue(sqs, item){
   const delay = (item.pointInTime - moment.utc().unix());
-  logger.info(`Publishing message id [${item.scheduleId}] ${delay}s of delay time`);
+  logger.info(`Prepare to publish message - Delay ${delay}s, id [${item.scheduleId}] `);
 
   const params = {
+    Id: item.scheduleId,
     MessageBody: JSON.stringify(item),
-    QueueUrl: QUEUE_URL,
     DelaySeconds: delay
   };
 
-  return sqs.sendMessage(params).promise();
+  sqsBuffer.push(params);
+
+  if( sqsBuffer.length == 10 ){
+    flushQueue();
+  }
 }
+
+function flushQueue(){
+
+  const copy = [];
+  sqsBuffer.forEach(e => copy.push(e));
+  sqsBuffer = [];
+
+  const params = {
+    QueueUrl: QUEUE_URL,
+    Entries: copy
+  };
+
+  if( copy.length > 0 ){
+    sqs.sendMessageBatch(params, (err, ok) => {
+      if( err ){
+        logger.error(`SQS batch send failed: ${JSON.stringify(err)}`);
+      } else {
+        logger.info(`${copy.length} messages sent: ${JSON.stringify(ok)}`);
+      }
+    });
+  }
+
+}
+
+// --------------- batch delete functions
 
 let deleteBuffer = [];
 
@@ -91,7 +125,7 @@ function addDeleteOperation(scheduleId, pointInTime){
   };
 
   deleteBuffer.push(params);
-  if( deleteBuffer.length == 10 ){
+  if( deleteBuffer.length == 25 ){
     flushDeleteOperation();
   }
 }
@@ -110,7 +144,7 @@ function flushDeleteOperation(){
   if( copy.length > 0 ){
     dynamoDb.batchWrite(requests, (err, ok) => {
       if( err ){
-        logger.error(`Fudeu: ${JSON.stringify(err)}`);
+        logger.error(`DynamoDB batch delete failed: ${JSON.stringify(err)}`);
       } else {
         logger.info(`${copy.length} deletes performed: ${JSON.stringify(ok)}`);
       }
