@@ -26,7 +26,7 @@ const Poller = {
   },
 
   pollForMessages(sqs, pollingTime){
-    // logger.info(`Polling for ${pollingTime}s for messages`);
+    logger.info(`Polling for ${pollingTime}s for messages`);
     const params = {
       QueueUrl: QUEUE_URL,
       WaitTimeSeconds: pollingTime,

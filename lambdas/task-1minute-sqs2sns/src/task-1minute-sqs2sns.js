@@ -12,22 +12,24 @@
  * limitations under the License.
 */
 
-const POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
+let POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
 
 const Poller = require('./poller');
+
+let bag = [];
+let count = 0;
 
 module.exports = {
   start(request, response, support){
 
     const { logger, sqs, sns } = support;
-
     Poller.logger(logger);
 
     const shouldKeepRunning = () => {
       const remaining = request.getRemainingTimeInMillis();
       const pollingTime = POLLING_TIME_IN_SECS * 1000;
 
-      return (remaining - pollingTime) > 2000;
+      return Math.abs(remaining - pollingTime) > 2000;
     };
 
     const tryRun = (hnd) => {
@@ -43,20 +45,57 @@ module.exports = {
     };
 
     const msgHandler = (messages) => {
+      logger.info(`Handling ${messages.length} messages`);
       if( messages.length > 0 ) {
-        Promise.all(messages.map(msg => Poller.processMessage(sns, sqs, msg)))
+        POLLING_TIME_IN_SECS = 0.5;
+
+        messages.forEach(m => {
+          bag.push(m);
+          count++;
+        });
+
+        logger.info(`Count: ${count}`);
+
+        if( count >= 50 ){
+          count = 0;
+          logger.info("Flushing...");
+
+          Promise.all(bag.map(msg => Poller.processMessage(sns, sqs, msg)))
           .then(results => {
-            // logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
-            tryRun(msgHandler);
+            logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
+            bag = [];
+            // tryRun(msgHandler);
           })
           .catch(err => response.error(err));
+        }
       } else {
-        tryRun(msgHandler);
+        if( count > 0 ){
+          count = 0;
+          logger.info("Flushing no messages...");
+
+          Promise.all(bag.map(msg => Poller.processMessage(sns, sqs, msg)))
+          .then(results => {
+            logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
+            bag = [];
+            // tryRun(msgHandler);
+          })
+          .catch(err => response.error(err));
+        }
+
+        POLLING_TIME_IN_SECS = 3;
       }
+
+      tryRun(msgHandler);
     };
 
+    tryRun(msgHandler);
+    tryRun(msgHandler);
+    tryRun(msgHandler);
+    tryRun(msgHandler);
     tryRun(msgHandler);
 
   }
 
 };
+
+
