@@ -29,7 +29,7 @@ module.exports = {
     poller([]);
 
     function poller(buffer){
-      logger.info(`Buffer size: ${buffer.length}`);
+      // logger.info(`Buffer size: ${buffer.length}`);
       Poller.pollForMessages(sqs, POLLING_TIME_IN_SECS)
       .then(msgs => handler(msgs, buffer))
       .catch(error => {
@@ -41,10 +41,10 @@ module.exports = {
 
     function handler(messages, buffer){
       if( messages.length > 0 ){
-        logger.info(`Handling ${messages.length} messages`);
+        // logger.info(`Handling ${messages.length} messages`);
         const bag = messageBufferizer(messages, buffer);
         if( bag.length >= 50 ){
-          logger.info(`Buffer full [${bag.length}], flushing...`);
+          // logger.info(`Buffer full [${bag.length}], flushing...`);
           publishAndDelete(bag);
         } else {
           poller(bag);
