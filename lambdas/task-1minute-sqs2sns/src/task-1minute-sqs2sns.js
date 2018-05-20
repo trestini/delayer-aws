@@ -16,86 +16,68 @@ let POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
 
 const Poller = require('./poller');
 
-let bag = [];
-let count = 0;
-
 module.exports = {
   start(request, response, support){
 
     const { logger, sqs, sns } = support;
     Poller.logger(logger);
 
-    const shouldKeepRunning = () => {
-      const remaining = request.getRemainingTimeInMillis();
-      const pollingTime = POLLING_TIME_IN_SECS * 1000;
+    poller([]);
+    poller([]);
+    poller([]);
+    poller([]);
+    poller([]);
 
-      return Math.abs(remaining - pollingTime) > 2000;
-    };
+    function poller(buffer){
+      logger.info(`Buffer size: ${buffer.length}`);
+      Poller.pollForMessages(sqs, POLLING_TIME_IN_SECS)
+      .then(msgs => handler(msgs, buffer))
+      .catch(error => {
+        const errorMsg = `Poll for message failed: ${JSON.stringify(error)}`;
+        logger.error(errorMsg);
+        response.error(errorMsg);
+      });
+    }
 
-    const tryRun = (hnd) => {
-      if( shouldKeepRunning() ){
-        Poller.pollForMessages(sqs, POLLING_TIME_IN_SECS)
-          .then(hnd)
-          .catch(error => {
-            const errorMsg = `Poll for message failed: ${JSON.stringify(error)}`;
-            logger.error(errorMsg);
-            response.error(errorMsg);
-          });
-      }
-    };
-
-    const msgHandler = (messages) => {
-      logger.info(`Handling ${messages.length} messages`);
-      if( messages.length > 0 ) {
-        POLLING_TIME_IN_SECS = 0.5;
-
-        messages.forEach(m => {
-          bag.push(m);
-          count++;
-        });
-
-        logger.info(`Count: ${count}`);
-
-        if( count >= 50 ){
-          count = 0;
-          logger.info("Flushing...");
-
-          Promise.all(bag.map(msg => Poller.processMessage(sns, sqs, msg)))
-          .then(results => {
-            logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
-            bag = [];
-            // tryRun(msgHandler);
-          })
-          .catch(err => response.error(err));
+    function handler(messages, buffer){
+      if( messages.length > 0 ){
+        logger.info(`Handling ${messages.length} messages`);
+        const bag = messageBufferizer(messages, buffer);
+        if( bag.length >= 50 ){
+          logger.info(`Buffer full [${bag.length}], flushing...`);
+          publishAndDelete(bag);
+        } else {
+          poller(bag);
         }
       } else {
-        if( count > 0 ){
-          count = 0;
-          logger.info("Flushing no messages...");
-
-          Promise.all(bag.map(msg => Poller.processMessage(sns, sqs, msg)))
-          .then(results => {
-            logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
-            bag = [];
-            // tryRun(msgHandler);
-          })
-          .catch(err => response.error(err));
+        if( buffer.length > 0 ){
+          publishAndDelete(buffer);
         }
-
-        POLLING_TIME_IN_SECS = 3;
       }
+    }
 
-      tryRun(msgHandler);
-    };
+    function publishAndDelete(messages){
+      Promise.all(messages.map(msg => Poller.processMessage(sns, sqs, msg)))
+      .then(results => {
+        logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
+        if( shouldKeepRunning() ){
+          poller([]);
+        }
+      })
+      .catch(err => response.error(err));
+    }
 
-    tryRun(msgHandler);
-    tryRun(msgHandler);
-    tryRun(msgHandler);
-    tryRun(msgHandler);
-    tryRun(msgHandler);
+    function messageBufferizer(messages, buffer){
+      messages.forEach(i => buffer.push(i));
+      return buffer;
+    }
+
+    function shouldKeepRunning(){
+      const remaining = request.getRemainingTimeInMillis();
+      const pollingTime = POLLING_TIME_IN_SECS * 1000;
+      return Math.abs(remaining - pollingTime) > 2000;
+    }
 
   }
 
 };
-
-
