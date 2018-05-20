@@ -28,31 +28,39 @@ module.exports = {
     const { sqs, dynamoDb, converter } = support;
     logger = support.logger;
 
+    logger.info(`Starting ingestion of ${request.Records.length} records`);
+
     request.Records.forEach(record => {
 
-      logger.info(`Now processing: \n${JSON.stringify(record, null, 2)}`);
+      // logger.info(`Now processing: \n${JSON.stringify(record, null, 2)}`);
 
-      logger.info(`eventName: ${record.eventName}, mapped: ${eventNameMapping[record.eventName]}`);
+      // logger.info(`eventName: ${record.eventName}, mapped: ${eventNameMapping[record.eventName]}`);
 
       const aux = record.dynamodb[eventNameMapping[record.eventName]];
 
-      logger.info(`image raw: ${JSON.stringify(aux, null, 2)}`);
+      // logger.info(`image raw: ${JSON.stringify(aux, null, 2)}`);
 
       const image = converter.unmarshall(aux);
 
-      logger.info(`image unmarshalled: ${JSON.stringify(image, null, 2)}`);
+      // logger.info(`image unmarshalled: ${JSON.stringify(image, null, 2)}`);
 
       const pointInTime = moment.unix(image.pointInTime);
 
-      logger.info(`pointInTime: ${pointInTime}`);
+      // logger.info(`pointInTime: ${pointInTime}`);
 
-      logger.info(`Fast track: ${isFastTrack(pointInTime)}`);
+      let logMsg = `eventID: ${record.eventID}, eventName: ${record.eventName}, mapped: ${eventNameMapping[record.eventName]}`;
+
+      if( record.eventName === 'INSERT' ){
+        logMsg += `, Fast track: ${isFastTrack(pointInTime)}`;
+      }
+
+      logger.info(logMsg);
 
       const streamType = record.eventName;
 
       if( isFastTrack(pointInTime) ){
         if( streamType === 'INSERT' ){
-          logger.info("I'll remove this to stream it");
+          // logger.info("I'll remove this to stream it");
 
           const params = {
             TableName: "schedule",
@@ -63,16 +71,16 @@ module.exports = {
           };
 
           dynamoDb.delete(params).promise()
-          .then(ok => {
-            response.ok("that's all folks: ", ok);
+          .then(() => {
+            response.ok();
           })
           .catch(err => {
-            response.error("oh nooo: ", err);
+            response.error("oh nooo: " + JSON.stringify(err));
           });
 
         } else if ( streamType === 'REMOVE' ){
-          logger.info("Time do party! Inserting on SQS queue");
-          logger.info(`Event to be enqueued: ${JSON.stringify(image, null, 2)}`);
+          // logger.info("Time do party! Inserting on SQS queue");
+          // logger.info(`Event to be enqueued: ${JSON.stringify(image, null, 2)}`);
 
           sendToQueue(sqs, image);
         }
