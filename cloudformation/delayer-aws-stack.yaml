@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+# IAM roles and policies ----------------------------------
+  DelayerAWSGlobalRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "sqs.amazonaws.com"
+                - "lambda.amazonaws.com"
+                - "dynamodb.amazonaws.com"
+                - "sns.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+  DelayerAWSGlobalPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "delayer-aws-global-policy"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action:
+          - dynamodb:DeleteItem
+          - dynamodb:GetItem
+          - dynamodb:BatchGetItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:PutItem
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:UpdateItem
+          - dynamodb:GetRecords
+          - dynamodb:GetShardIterator
+          - dynamodb:DescribeStream
+          - dynamodb:ListStreams
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          - sns:Publish
+          - sqs:SendMessage
+          - sqs:DeleteMessage
+          - sqs:ReceiveMessage
+          Effect: Allow
+          Resource: "*"
+      Roles:
+        -
+          Ref: "DelayerAWSGlobalRole"
+
+# Lambda functions ----------------------------------------
+  APISchedulePost:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: api-schedule-post
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "20"
+      MemorySize: 128
+
+  Task1MinuteEnqueuer:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: task-1minute-enqueuer
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "300"
+      MemorySize: 256
+
+  Task1MinuteSqs2Sns:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: task-1minute-sqs2sns
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "300"
+      MemorySize: 256
+
+  StreamDynamoDBFastTrackEnqueuer:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: stream-dynamodb-fasttrack_enqueuer
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: "60"
+      MemorySize: 256
+
+# SQS Queues ----------------------------------------------
+  WaitQueue:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: DELAYER_wait-queue
+      ReceiveMessageWaitTimeSeconds: 3
+      VisibilityTimeout: 10
+      MessageRetentionPeriod: 3600
+
+# DynamoDB Table ------------------------------------------
+  ScheduleTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: "schedule"
+      AttributeDefinitions:
+        - AttributeName: "scheduleId"
+          AttributeType: "S"
+        - AttributeName: "pointInTime"
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: "scheduleId"
+          KeyType: "HASH"
+        - AttributeName: "pointInTime"
+          KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+
+# SNS Topics ----------------------------------------------
+  ScheduleCreatedEvent:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_EVENT_schedule-created"
+      DisplayName: Schedule registration event topic
+  ScheduleCancelledEvent:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_EVENT_schedule-cancelled"
+      DisplayName: Cancel schedule event topic
+  ScheduleInWaitQueueEvent:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_EVENT_schedule-waiting"
+      DisplayName: Schedule sent to DELAYER_wait-queue
+  ActionFinishedEvent:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_EVENT_action-finished"
+      DisplayName: Action Finalized event
+
+  # Action topics
+  HTTPAction:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_ACTION_HTTP"
+      DisplayName: HTTP Action executor topic
+  SQSSendAction:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "DELAYER_ACTION_SQS_SEND"
+      DisplayName: SQS Message Post Action executor topic
