@@ -103,14 +103,18 @@ Resources:
       Timeout: "60"
       MemorySize: 256
 
-# SQS Queues ----------------------------------------------
-  WaitQueue:
-    Type: "AWS::SQS::Queue"
+  SNSActionHTTPLambda:
+    Type: "AWS::Lambda::Function"
     Properties:
-      QueueName: DELAYER_wait-queue
-      ReceiveMessageWaitTimeSeconds: 3
-      VisibilityTimeout: 10
-      MessageRetentionPeriod: 3600
+      FunctionName: sns-action-http
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: 5
+      MemorySize: 128
 
 # DynamoDB Table ------------------------------------------
   ScheduleTable:
@@ -130,37 +134,44 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: "1"
         WriteCapacityUnits: "1"
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  EventSourceMapping:
+    Type: "AWS::Lambda::EventSourceMapping"
+    Properties:
+      EventSourceArn: !GetAtt ScheduleTable.StreamArn
+      FunctionName: stream-dynamodb-fasttrack_enqueuer
+      StartingPosition: "TRIM_HORIZON"
+
+# SQS Queues ----------------------------------------------
+  WaitQueue:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: DELAYER_wait-queue
+      ReceiveMessageWaitTimeSeconds: 3
+      VisibilityTimeout: 10
+      MessageRetentionPeriod: 3600
 
 # SNS Topics ----------------------------------------------
-  ScheduleCreatedEvent:
-    Type: "AWS::SNS::Topic"
-    Properties:
-      TopicName: "DELAYER_EVENT_schedule-created"
-      DisplayName: Schedule registration event topic
-  ScheduleCancelledEvent:
-    Type: "AWS::SNS::Topic"
-    Properties:
-      TopicName: "DELAYER_EVENT_schedule-cancelled"
-      DisplayName: Cancel schedule event topic
-  ScheduleInWaitQueueEvent:
-    Type: "AWS::SNS::Topic"
-    Properties:
-      TopicName: "DELAYER_EVENT_schedule-waiting"
-      DisplayName: Schedule sent to DELAYER_wait-queue
-  ActionFinishedEvent:
-    Type: "AWS::SNS::Topic"
-    Properties:
-      TopicName: "DELAYER_EVENT_action-finished"
-      DisplayName: Action Finalized event
-
   # Action topics
-  HTTPAction:
+  HTTPActionTopic:
     Type: "AWS::SNS::Topic"
     Properties:
       TopicName: "DELAYER_ACTION_HTTP"
       DisplayName: HTTP Action executor topic
-  SQSSendAction:
-    Type: "AWS::SNS::Topic"
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
     Properties:
-      TopicName: "DELAYER_ACTION_SQS_SEND"
-      DisplayName: SQS Message Post Action executor topic
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref HTTPActionTopic
+      FunctionName: !GetAtt SNSActionHTTPLambda.Arn
+
+  LambdaHTTPActionToHTTPActionTopic:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: !GetAtt SNSActionHTTPLambda.Arn
+      Protocol: lambda
+      TopicArn: !Ref HTTPActionTopic
