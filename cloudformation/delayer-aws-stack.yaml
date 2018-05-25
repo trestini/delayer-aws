@@ -175,3 +175,37 @@ Resources:
       Endpoint: !GetAtt SNSActionHTTPInvoker.Arn
       Protocol: lambda
       TopicArn: !Ref HTTPActionTopic
+
+# API Gateway ---------------------------------------------
+  SchedulerAPI:
+    Type: "AWS::ApiGateway::RestApi"
+    Properties:
+      Description: delayer-aws REST API
+      Name: scheduler-api
+
+  ScheduleResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      ParentId: !GetAtt SchedulerAPI.RootResourceId
+      PathPart: schedule
+      RestApiId: !Ref SchedulerAPI
+
+  ScheduleResourcePOST:
+    Type: "AWS::ApiGateway::Method"
+    Properties:
+      RestApiId: !Ref SchedulerAPI
+      ResourceId: !Ref ScheduleResource
+      HttpMethod: "POST"
+      AuthorizationType: "NONE"
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APISchedulePost.Arn}/invocations
+
+  APISchedulePostLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Ref ScheduleResourcePOST
+      FunctionName: !GetAtt APISchedulePost.Arn
