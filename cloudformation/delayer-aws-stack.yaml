@@ -103,10 +103,10 @@ Resources:
       Timeout: "60"
       MemorySize: 256
 
-  SNSActionHTTPLambda:
+  SNSActionHTTPInvoker:
     Type: "AWS::Lambda::Function"
     Properties:
-      FunctionName: sns-action-http
+      FunctionName: sns-action-httpinvoker
       Handler: "index.handler"
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
@@ -167,11 +167,11 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref HTTPActionTopic
-      FunctionName: !GetAtt SNSActionHTTPLambda.Arn
+      FunctionName: !GetAtt SNSActionHTTPInvoker.Arn
 
   LambdaHTTPActionToHTTPActionTopic:
     Type: "AWS::SNS::Subscription"
     Properties:
-      Endpoint: !GetAtt SNSActionHTTPLambda.Arn
+      Endpoint: !GetAtt SNSActionHTTPInvoker.Arn
       Protocol: lambda
       TopicArn: !Ref HTTPActionTopic
