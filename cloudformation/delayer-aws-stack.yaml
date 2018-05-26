@@ -190,7 +190,7 @@ Resources:
       PathPart: schedule
       RestApiId: !Ref SchedulerAPI
 
-  ScheduleResourcePOST:
+  SchedulePostMethod:
     Type: "AWS::ApiGateway::Method"
     Properties:
       RestApiId: !Ref SchedulerAPI
@@ -207,5 +207,12 @@ Resources:
     Properties:
       Action: "lambda:InvokeFunction"
       Principal: "apigateway.amazonaws.com"
-      SourceArn: !Ref ScheduleResourcePOST
+      SourceArn: !Join [ "", ["arn:aws:execute-api:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":", !Ref SchedulerAPI, "/*/*/*" ] ]
       FunctionName: !GetAtt APISchedulePost.Arn
+
+  Deployment:
+    DependsOn: SchedulePostMethod
+    Type: "AWS::ApiGateway::Deployment"
+    Properties:
+      RestApiId: !Ref SchedulerAPI
+      StageName: "DEFAULT"
