@@ -1,0 +1,41 @@
+{
+	"info": {
+		"_postman_id": "199678d0-2974-e5fa-8b88-81b806c68a8d",
+		"name": "delayer-aws",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Schedule an event",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"schedule\": {\n\t\t\"pointInTime\": \"2018-04-28T15:11:55-0300\"\n\t},\n\t\"context\": {},\n\t\"action\": {\n\t\t\"type\": \"HTTP\",\n\t\t\"httpConfig\": {\n\t\t\t\"method\": \"GET\",\n\t\t\t\"url\": \"https://www.google.com\",\n\t\t\t\"requestType\": \"FIRE_FORGET\"\n\t\t}\n\t}\n}"
+				},
+				"url": {
+					"raw": "https://sdzp92wil0.execute-api.us-east-1.amazonaws.com/dev/schedule",
+					"protocol": "https",
+					"host": [
+						"sdzp92wil0",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"schedule"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
