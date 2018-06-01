@@ -197,10 +197,20 @@ Resources:
       ResourceId: !Ref ScheduleResource
       HttpMethod: "POST"
       AuthorizationType: "NONE"
+      RequestValidatorId: !Ref RequestValidator
+      RequestModels:
+        "application/json": ScheduleModel
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APISchedulePost.Arn}/invocations
+
+  RequestValidator:
+    Type: 'AWS::ApiGateway::RequestValidator'
+    Properties:
+      Name: ScheduleModelValidator
+      RestApiId: !Ref SchedulerAPI
+      ValidateRequestBody: true
 
   ScheduleModel:
     Type: "AWS::ApiGateway::Model"
