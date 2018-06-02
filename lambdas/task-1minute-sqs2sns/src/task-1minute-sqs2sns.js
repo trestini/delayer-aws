@@ -12,9 +12,11 @@
  * limitations under the License.
 */
 
-let POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
+const POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
+const EXEC_STARTED = new Date().getTime();
 
 const Poller = require('./poller');
+
 
 module.exports = {
   start(request, response, support){
@@ -23,10 +25,10 @@ module.exports = {
     Poller.logger(logger);
 
     poller([]);
-    poller([]);
-    poller([]);
-    poller([]);
-    poller([]);
+    // poller([]);
+    // poller([]);
+    // poller([]);
+    // poller([]);
 
     function poller(buffer){
       // logger.info(`Buffer size: ${buffer.length}`);
@@ -43,24 +45,29 @@ module.exports = {
       if( messages.length > 0 ){
         // logger.info(`Handling ${messages.length} messages`);
         const bag = messageBufferizer(messages, buffer);
-        if( bag.length >= 50 ){
+        if( bag.length >= 20 ){
           // logger.info(`Buffer full [${bag.length}], flushing...`);
           publishAndDelete(bag);
         } else {
           poller(bag);
         }
       } else {
+        let processed = 0;
         if( buffer.length > 0 ){
+          // no new messsages, flush the buffer
           publishAndDelete(buffer);
+          processed = buffer.length;
         }
+        // no new messages, shoud keep running?
+        if( shouldKeepRunning(processed) ) poller([]);
       }
     }
 
     function publishAndDelete(messages){
       Promise.all(messages.map(msg => Poller.processMessage(sns, sqs, msg)))
       .then(results => {
-        logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning()}`);
-        if( shouldKeepRunning() ){
+        logger.info(`Processed ${results.length} messages. Will keep running? ${shouldKeepRunning(results.length)}`);
+        if( shouldKeepRunning(results.length) ){
           poller([]);
         }
       })
@@ -72,10 +79,23 @@ module.exports = {
       return buffer;
     }
 
-    function shouldKeepRunning(){
-      const remaining = request.getRemainingTimeInMillis();
-      const pollingTime = POLLING_TIME_IN_SECS * 1000;
-      return Math.abs(remaining - pollingTime) > 2000;
+    function shouldKeepRunning(processed){
+      const now = new Date().getTime();
+      // logger.info(`Now: ${now}, EXEC_STARTED: ${EXEC_STARTED}`);
+
+      if( now - EXEC_STARTED < 60000 ){
+        // i'm running for less then 1 minute
+        // logger.info(`I'm running for ${(now - EXEC_STARTED) / 1000}s. keep walking`);
+        return true;
+      } else {
+        // i'm running for more then 1 minute...
+        const remaining = request.getRemainingTimeInMillis();
+        logger.info(`${remaining / 1000}s to timeout, ${processed} messages processed`);
+        const pollingTime = POLLING_TIME_IN_SECS * 1000;
+        // ... and I have processed messages in last interaction
+        return (Math.abs(remaining - pollingTime) > 2000) && (processed > 0);
+      }
+
     }
 
   }
