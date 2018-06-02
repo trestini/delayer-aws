@@ -13,10 +13,10 @@
 */
 
 const POLLING_TIME_IN_SECS = process.env.POLLING_TIME_IN_SECS || 3;
+const MESSAGE_BUFFER_SIZE = process.env.MESSAGE_BUFFER_SIZE || 10;
 const EXEC_STARTED = new Date().getTime();
 
 const Poller = require('./poller');
-
 
 module.exports = {
   start(request, response, support){
@@ -25,10 +25,6 @@ module.exports = {
     Poller.logger(logger);
 
     poller([]);
-    // poller([]);
-    // poller([]);
-    // poller([]);
-    // poller([]);
 
     function poller(buffer){
       // logger.info(`Buffer size: ${buffer.length}`);
@@ -45,7 +41,7 @@ module.exports = {
       if( messages.length > 0 ){
         // logger.info(`Handling ${messages.length} messages`);
         const bag = messageBufferizer(messages, buffer);
-        if( bag.length >= 20 ){
+        if( bag.length >= MESSAGE_BUFFER_SIZE ){
           // logger.info(`Buffer full [${bag.length}], flushing...`);
           publishAndDelete(bag);
         } else {
