@@ -1,8 +1,8 @@
 # Use of DynamoDB streams for *enqueuer*
 
-*   Status: partially superseeds [ADR-0003]
+*   Status: accepted - partially superseeds [ADR-0003]
 *   Proposers: trestini
-*   Deciders: 
+*   Deciders: trestini
 *   Date: 2018-05-16
 
 ## Context and Problem Statement
@@ -26,13 +26,29 @@ The [ADR-0003] states that the main purpose of DynamoDB is not hold historical d
 
 ## Decision Outcome
 
-(( to be taken, proof of concept in course ))
+Chosen option was to move to a solution based on Dynamo Streams. The proposed solution doesn't use TTL, since according [AWS docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html), the deletion of a expired record should occurs within 48 hours - which, for this case, is not acceptable.
+
+The solution is based in the fact that records generates events in DynamoDB that can be consumed by lambda functions. In this sense, when a new schedule is deleted, a DELETE event is raised, and the function will schedule it for the proper pointInTime. In other hand, when a schedule is placed within the delayer period (the timeframe that events are waiting in the delayer queue), this function deletes this record which generates another DELETE that will be handled. If the schedule is not in the delayer period, it will be stored until the *task-1minute-enqueuer* finds it and then deletes the record.
+
+Hey, but why *api-schedule-post* don't simply put this in que delayer queue directly?
+
+The short answer is: because each lambda should do 0, 1 or tops 2 data transformation. 
+
+Each lambda should be very restrict on what it does. *api-schedule-post* is the function responsible to handle the POST request from API Gateway. Handle and transform the data and store it somewhere is the "reason to exists" of this function. How this information is processed later, is not it's concern.
+
+Have in mind that in this stage of development, keep the integrity of the design is more important that this fine performance tunning.
+
+Below, the new roles of the involved lambdas:
+
+*   *task-1minute-enqueuer* - this function still be triggered by the cloudwatch events and simply deletes the records that entered in the delayer period.
+*   *stream-dynamodb-fasttrack_enqueuer* - send the records that are raised in DELETE event to the SQS queue. If the event is an INSERT and it will be in the delayer period, it deletes the record.
 
 Positive Consequences:
-*   
+*   Keeps the entire architecture design more *push based*, which is very important for a serverless architecture style.
+*   Keeps the integrity of the flow: only 1 lambda sends records do sqs, only 1 lambda inserts records in the dynamodb, the event the pushes records to sqs is always the same.
 
 Negative consequences:
-*   
+*   Still keeps the increased writes in DynamoDB (each delete in Dynamo counts as a write operation)
 
 ## Links
 
