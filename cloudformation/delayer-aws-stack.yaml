@@ -388,3 +388,47 @@ Resources:
     Properties:
       RestApiId: !Ref SchedulerAPI
       StageName: "DEFAULT"
+
+# Cloudwatch Tasks ----------------------------------------
+  PermissionToInvokeTask1MinuteEnqueuer:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: !Ref Task1MinuteEnqueuer
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "ScheduledRule"
+          - "Arn"
+
+  PermissionToInvokeTask1MinuteSQS2SNS:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: !Ref Task1MinuteSqs2Sns
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "ScheduledRule"
+          - "Arn"
+
+  ScheduledRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: DelayerAWS_CWSchedulerRule
+      Description: Scheduled Rule for lambda tasks
+      ScheduleExpression: "rate(1 minute)"
+      State: "DISABLED"
+      Targets:
+        -
+          Arn:
+            Fn::GetAtt:
+              - "Task1MinuteEnqueuer"
+              - "Arn"
+          Id: "Task1MinuteEnqueuer"
+        -
+          Arn:
+            Fn::GetAtt:
+              - "Task1MinuteSqs2Sns"
+              - "Arn"
+          Id: "Task1MinuteSqs2Sns"
