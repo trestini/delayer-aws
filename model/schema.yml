@@ -15,16 +15,31 @@ properties:
     $ref: "#/definitions/context"
   action:
     type: object
-    properties:
-      type:
-        enum:
-          - HTTP
-          - SQS_SEND
-          - SQS_RECEIVE
-          - SNS_SEND
-      httpConfig:
-        $ref: "#/definitions/httpConfig"
-    additionalProperties: false
+    oneOf:
+      -
+        properties:
+          type:
+            enum:
+              - HTTP_REQUEST
+          httpRequestConfig:
+            $ref: "#/definitions/httpConfig"
+        additionalProperties: false
+      -
+        properties:
+          type:
+            enum:
+              - SQS_SEND
+          sqsSendConfig:
+            $ref: "#/definitions/sqsSendConfig"
+        additionalProperties: false
+      -
+        properties:
+          type:
+            enum:
+              - CUSTOM
+          customConfig:
+            $ref: "#/definitions/customConfig"
+        additionalProperties: false
 required:
   - schedule
   - context
@@ -44,8 +59,8 @@ definitions:
           type: object
       payload:
         type: string
-    additionalProperties: false
-  httpConfig:
+    additionalProperties: true
+  httpRequestConfig:
     type: object
     properties:
       method:
@@ -75,6 +90,30 @@ definitions:
           url:
             type: string
     additionalProperties: false
+
+  sqsSendConfig:
+    type: object
+    properties:
+      queueName:
+        type: string
+      messageAttributes:
+        type: array
+        items:
+          type: object
+      payload:
+        type: string
+    additionalProperties: false
+
+  customConfig:
+    type: object
+    properties:
+      configName:
+        type: string
+      topicArn:
+        type: string
+    required:
+      - configName
+    additionalProperties: true
 
   httpMethod:
     enum:
