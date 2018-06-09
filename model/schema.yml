@@ -25,18 +25,6 @@ properties:
       httpConfig:
         $ref: "#/definitions/httpConfig"
     additionalProperties: false
-  notification:
-    type: object
-    properties:
-      slack:
-        $ref: "#/definitions/slackNotification"
-      email:
-        $ref: "#/definitions/emailNotification"
-    anyOf:
-      - required:
-        - slack
-      - required:
-        - email
 required:
   - schedule
   - context
