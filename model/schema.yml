@@ -20,7 +20,7 @@ properties:
         properties:
           type:
             enum:
-              - HTTP_REQUEST
+              - http-request
           httpRequestConfig:
             $ref: "#/definitions/httpRequestConfig"
         additionalProperties: false
@@ -28,7 +28,7 @@ properties:
         properties:
           type:
             enum:
-              - SQS_SEND
+              - sqs-send
           sqsSendConfig:
             $ref: "#/definitions/sqsSendConfig"
         additionalProperties: false
@@ -36,7 +36,7 @@ properties:
         properties:
           type:
             enum:
-              - CUSTOM
+              - custom
           customConfig:
             $ref: "#/definitions/customConfig"
         additionalProperties: false
