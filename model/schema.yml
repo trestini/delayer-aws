@@ -71,24 +71,6 @@ definitions:
         enum:
           - WAIT_RETURN
           - FIRE_FORGET
-      returnExpected:
-        type: object
-        properties:
-          code:
-            type: array
-            items:
-              type: number
-          body:
-            type: string
-        required:
-          - code
-      preCheck:
-        type: object
-        properties:
-          method:
-            $ref: "#/definitions/httpMethod"
-          url:
-            type: string
     additionalProperties: false
 
   sqsSendConfig:
