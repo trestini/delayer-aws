@@ -103,10 +103,10 @@ Resources:
       Timeout: "60"
       MemorySize: 256
 
-  SNSActionHTTPInvoker:
+  SNSActionHTTPRequest:
     Type: "AWS::Lambda::Function"
     Properties:
-      FunctionName: sns-action-httpinvoker
+      FunctionName: sns_action_http-request
       Handler: "index.handler"
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
@@ -155,26 +155,26 @@ Resources:
 
 # SNS Topics ----------------------------------------------
   # Action topics
-  HTTPActionTopic:
+  HTTPRequestActionTopic:
     Type: "AWS::SNS::Topic"
     Properties:
-      TopicName: "DELAYER_ACTION_HTTP"
-      DisplayName: HTTP Action executor topic
+      TopicName: "http-request_action_topic"
+      DisplayName: HTTP Request Action Topic
 
-  HTTPActionTopicLambdaInvokePermission:
+  HTTPRequestActionTopicLambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: "lambda:InvokeFunction"
       Principal: "sns.amazonaws.com"
-      SourceArn: !Ref HTTPActionTopic
-      FunctionName: !GetAtt SNSActionHTTPInvoker.Arn
+      SourceArn: !Ref HTTPRequestActionTopic
+      FunctionName: !GetAtt SNSActionHTTPRequest.Arn
 
-  LambdaHTTPActionToHTTPActionTopic:
+  HTTPRequestActionToHTTPRequestActionTopicSubscription:
     Type: "AWS::SNS::Subscription"
     Properties:
-      Endpoint: !GetAtt SNSActionHTTPInvoker.Arn
+      Endpoint: !GetAtt SNSActionHTTPRequest.Arn
       Protocol: lambda
-      TopicArn: !Ref HTTPActionTopic
+      TopicArn: !Ref HTTPRequestActionTopic
 
 # API Gateway ---------------------------------------------
   SchedulerAPI:
