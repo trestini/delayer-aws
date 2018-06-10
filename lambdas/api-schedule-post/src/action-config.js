@@ -43,7 +43,7 @@ const actionConfig = {
     if( apiActionObject.type === "custom" ){
       return apiActionObject.topicArn;
     } else {
-      return apiActionObject.type + "_action-topic";
+      return apiActionObject.type + "_action_topic";
     }
   }
 
