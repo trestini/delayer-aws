@@ -16,7 +16,6 @@ const moment = require('moment');
 
 module.exports = {
 
-
   scheduleTimeFromEvent(scheduleObj){
     let scheduleTime = undefined;
     scheduleTime = Utils.checkers.date(scheduleObj.pointInTime);
@@ -27,7 +26,7 @@ module.exports = {
     const now = moment.utc();
     const constraint = now.add(90, 's');
     if( !scheduleTime.isAfter(constraint) ){
-      throw `Unable to create a schedule before ${constraint} (UTC)`;
+      throw `Unable to create a schedule before ${constraint.toISOString()}`;
     } else {
       return scheduleTime;
     }

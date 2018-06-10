@@ -12,19 +12,22 @@
  * limitations under the License.
 */
 
-const moment = require('moment');
-
 const Schedule = require('./schedule');
+const ActionConfig = require('./action-config');
 
 module.exports = {
   start(request, response, support){
 
     const { logger, dynamoDb } = support;
 
+    // logger.info(`raw request: ${JSON.stringify(request, null, 2)}`);
+
     const apiKey = request.requestContext.identity.apiKey;
     const scheduleId = request.awsRequestId;
 
     const body = request.body;
+
+    // logger.info(`parsed body: ${JSON.stringify(body, null, 2)}`);
 
     try {
 
@@ -38,27 +41,26 @@ module.exports = {
         return;
       }
 
-      const timeframePrefix = scheduleTime.format('YYYY-MM-DD_HH');
-      const timeframeIndex = parseInt(scheduleTime.minute() / 15);
-
-      const scheduleTimeframe = timeframePrefix + "-" + timeframeIndex;
-
       const pointInTime = scheduleTime.unix();
+
+      const actionObj = ActionConfig.getConfigObject(body.action);
+      const topicArn = ActionConfig.getTopicArn(request, body.action);
+
+      // logger.info(`ActionConfig Object ${JSON.stringify(actionObj)}`);
 
       let dbobj = {
         /* indexes */
-        scheduleTimeframe: scheduleTimeframe,
         scheduleId: scheduleId,
         pointInTime: pointInTime,
         /* /indexes */
+
         apiKey: apiKey,
-        actionConfig: body.action.httpConfig,
-        notification: body.notification,
-        context: body.context,
-        createdOn: moment.utc().unix()
+        topicArn: topicArn,
+        actionConfig: actionObj,
+        context: body.context
       };
 
-      // console.log("Sending object to dynamodb:\n", JSON.stringify(dbobj, null, 2));
+      // logger.info("Sending object to dynamodb:\n", JSON.stringify(dbobj, null, 2));
 
       const dynamoRequest = {
         TableName: 'schedule',
