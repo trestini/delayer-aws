@@ -10,8 +10,12 @@ This log lists the architectural decisions for delayer-aws.
 - [ADR-0003](0003-dymamodb-update-strategy.md) - DynamoDB update strategy
 - [ADR-0004](0004-use-log-framework-for-logging.md) - Use of a logging framework
 - [ADR-0005](0005-use-of-dynamodb-streams-for-enqueuer.md) - Use of DynamoDB streams for *enqueuer*
+- [ADR-0006](0006-use-build-and-code-coverage-tools.md) - Use build and code coverage tools
+- [ADR-0007](0007-schedule-internal-data-structure.md) - Schedule internal data structure
 
 <!-- adrlogstop -->
+
+
 
 
 

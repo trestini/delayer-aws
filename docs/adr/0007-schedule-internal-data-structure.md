@@ -1,8 +1,8 @@
 # Schedule internal data structure
 
-*   Status: proposed
+*   Status: accepted
 *   Proposers: trestini
-*   Deciders: 
+*   Deciders: trestini
 *   Date: 2018-06-10
 
 ## Context and Problem Statement
