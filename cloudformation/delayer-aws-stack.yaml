@@ -359,7 +359,7 @@ Resources:
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref SchedulerAPI
-      StageName: "DEFAULT"
+      StageName: "v1"
 
 # Cloudwatch Tasks ----------------------------------------
   PermissionToInvokeTask1MinuteEnqueuer:
