@@ -14,7 +14,6 @@
 
 const moment = require('moment');
 
-const TOPIC_ARN = "arn:aws:sns:us-east-1:472249637553:DELAYER_ACTION_HTTP";
 const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/472249637553/DELAYER_wait-queue";
 
 let logger;
@@ -58,9 +57,9 @@ const Poller = {
 
         const drift = now.unix() - parseInt(msg.pointInTime);
 
-        logger.info(`Processed ${msg.scheduleId} with drift of ${drift} secs`);
+        logger.info(`Publishing ${msg.scheduleId} on [${msg.topicArn}] with drift of ${drift} secs`);
 
-        Poller.publishOnTopic(sns, TOPIC_ARN, sqsMessage.Body)
+        Poller.publishOnTopic(sns, msg.topicArn, sqsMessage.Body)
           .then( () => {
             Poller.deleteMessage(sqs, QUEUE_URL, sqsMessage);
             resolve({ result: sqsMessage });
@@ -76,7 +75,6 @@ const Poller = {
   },
 
   publishOnTopic(sns, topicArn, message){
-    // console.log(`Publicando [${message}] no topico [${topicArn}]`);
     return sns.publish({
       Message: message,
       TopicArn: topicArn
