@@ -67,7 +67,7 @@ module.exports = {
           poller([]);
         }
       })
-      .catch(err => response.error(err));
+      .catch(err => response.error(JSON.stringify(err)));
     }
 
     function messageBufferizer(messages, buffer){
@@ -79,7 +79,7 @@ module.exports = {
       const now = new Date().getTime();
       // logger.info(`Now: ${now}, EXEC_STARTED: ${EXEC_STARTED}`);
 
-      if( now - EXEC_STARTED < 60000 ){
+      if( Math.abs(now - EXEC_STARTED) < 60000 ){
         // i'm running for less then 1 minute
         // logger.info(`I'm running for ${(now - EXEC_STARTED) / 1000}s. keep walking`);
         return true;
