@@ -19,8 +19,13 @@ module.exports = {
   start(request, response, support){
 
     const { logger } = support;
+
+    logger.info(`raw request arrived: ${JSON.stringify(request, null, 2)}`);
+
     const body = request.Message;
     const config = body.actionConfig;
+
+    logger.info(`parsed body: ${JSON.stringify(body, null, 2)}`);
 
     const customUri = `${config.requestType === "FIRE_FORGET" ? "fireforget" : "withwait"}/${body.scheduleId}/${body.pointInTime}`;
 
@@ -28,7 +33,8 @@ module.exports = {
       url: `${config.url}/${customUri}`,
       method: config.method,
       json: true,
-      body: body.context
+      headers: body.context.headers,
+      body: body.context.payload
     };
 
     if( config.requestType === 'FIRE_FORGET' ) {

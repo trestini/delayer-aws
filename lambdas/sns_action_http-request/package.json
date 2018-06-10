@@ -1,5 +1,5 @@
 {
-  "name": "sns-action-httpinvoker",
+  "name": "sns_action_http-request",
   "version": "1.0.0",
   "description": "",
   "main": "gulpfile.js",

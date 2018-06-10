@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-const lambda = require('./sns-action-httpinvoker');
+const lambda = require('./sns_action_http-request');
 const logger = require('./support/logger');
 
 const AWS = require('aws-sdk');
