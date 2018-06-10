@@ -1,0 +1,96 @@
+id: "schemas/delayer-api/api-validation"
+$schema: "http://json-schema.org/draft-06/schema#"
+title: api-validation
+type: object
+properties:
+  schedule:
+    type: object
+    properties:
+      pointInTime:
+        type: string
+        format: date-time
+    required:
+      - pointInTime
+    additionalProperties: false
+  context:
+    type: object
+    properties:
+      headers:
+        type: array
+        items:
+          type: object
+      payload:
+        type: string
+    required:
+      - payload
+    additionalProperties: true
+  action:
+    type: object
+    oneOf:
+      -
+        properties:
+          type:
+            enum:
+              - http-request
+          httpRequestConfig:
+            properties:
+              method:
+                enum:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - HEAD
+                  - OPTIONS
+              url:
+                type: string
+              requestType:
+                enum:
+                  - WAIT_RETURN
+                  - FIRE_FORGET
+            additionalProperties: false
+        additionalProperties: false
+      -
+        properties:
+          type:
+            enum:
+              - sqs-send
+          sqsSendConfig:
+            type: object
+            properties:
+              queueName:
+                type: string
+              messageAttributes:
+                type: array
+                items:
+                  type: object
+              payload:
+                type: string
+            required:
+              - queueName
+              - payload
+            additionalProperties: false
+        additionalProperties: false
+      -
+        properties:
+          type:
+            enum:
+              - custom
+          customConfig:
+            type: object
+            properties:
+              configName:
+                type: string
+              topicArn:
+                type: string
+            required:
+              - configName
+              - topicArn
+            additionalProperties: true
+        additionalProperties: false
+required:
+  - schedule
+  - context
+  - action
+additionalProperties: false
