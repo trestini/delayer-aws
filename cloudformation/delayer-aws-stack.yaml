@@ -103,10 +103,23 @@ Resources:
       Timeout: "60"
       MemorySize: 256
 
-  SNSActionHTTPRequest:
+  SNSActionHTTPRequestLambda:
     Type: "AWS::Lambda::Function"
     Properties:
       FunctionName: sns_action_http-request
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: 5
+      MemorySize: 128
+
+  SNSActionSQSSendLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: sns_action_sqs-send
       Handler: "index.handler"
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
@@ -155,6 +168,7 @@ Resources:
 
 # SNS Topics ----------------------------------------------
   # Action topics
+  # HTTP Action
   HTTPRequestActionTopic:
     Type: "AWS::SNS::Topic"
     Properties:
@@ -167,14 +181,38 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref HTTPRequestActionTopic
-      FunctionName: !GetAtt SNSActionHTTPRequest.Arn
+      FunctionName: !GetAtt SNSActionHTTPRequestLambda.Arn
 
   HTTPRequestActionToHTTPRequestActionTopicSubscription:
     Type: "AWS::SNS::Subscription"
     Properties:
-      Endpoint: !GetAtt SNSActionHTTPRequest.Arn
+      Endpoint: !GetAtt SNSActionHTTPRequestLambda.Arn
       Protocol: lambda
       TopicArn: !Ref HTTPRequestActionTopic
+  # /HTTP Action
+
+  # SQS Send
+  SQSSendActionTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "sqs-send_action_topic"
+      DisplayName: SQS Send Action Topic
+
+  SQSSendActionTopicLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref SQSSendActionTopic
+      FunctionName: !GetAtt SNSActionSQSSendLambda.Arn
+
+  SQSSendActionToHTTPRequestActionTopicSubscription:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: !GetAtt SNSActionSQSSendLambda.Arn
+      Protocol: lambda
+      TopicArn: !Ref SQSSendActionTopic
+  # /SQS Send
 
 # API Gateway ---------------------------------------------
   SchedulerAPI:
