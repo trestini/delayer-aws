@@ -129,6 +129,19 @@ Resources:
       Timeout: 5
       MemorySize: 128
 
+  SNSActionLambdaCallLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: sns_action_lambda-call
+      Handler: "index.handler"
+      Role: !GetAtt DelayerAWSGlobalRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (e,c,cb) => { cb(null); };
+      Runtime: "nodejs6.10"
+      Timeout: 5
+      MemorySize: 128
+
 # DynamoDB Table ------------------------------------------
   ScheduleTable:
     Type: "AWS::DynamoDB::Table"
@@ -213,6 +226,29 @@ Resources:
       Protocol: lambda
       TopicArn: !Ref SQSSendActionTopic
   # /SQS Send
+
+  # Lambda Call
+  LambdaCallActionTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "lambda-call_action_topic"
+      DisplayName: Lambda Call Action Topic
+
+  LambdaCallActionTopicLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref LambdaCallActionTopic
+      FunctionName: !GetAtt SNSActionLambdaCallLambda.Arn
+
+  LambdaCallActionToHTTPRequestActionTopicSubscription:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: !GetAtt SNSActionLambdaCallLambda.Arn
+      Protocol: lambda
+      TopicArn: !Ref LambdaCallActionTopic
+  # /Lambda Call
 
 # API Gateway ---------------------------------------------
   SchedulerAPI:
