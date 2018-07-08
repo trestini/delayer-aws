@@ -21,8 +21,6 @@ properties:
           type: object
       payload:
         type: string
-    required:
-      - payload
     additionalProperties: true
   action:
     type: object
