@@ -59,7 +59,16 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const body = { message : "Backend application not yet deployed" };
+            const ret = {
+              statusCode: 503,
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify(body)
+            };
+            console.log(body.message);
+            cb(null, ret);
+          };
       Runtime: "nodejs6.10"
       Timeout: "20"
       MemorySize: 128
@@ -72,7 +81,11 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const msg = "Lambda function not yet deployed";
+            console.log(msg);
+            cb(msg);
+          };
       Runtime: "nodejs6.10"
       Timeout: "300"
       MemorySize: 256
@@ -85,7 +98,11 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const msg = "Lambda function not yet deployed";
+            console.log(msg);
+            cb(msg);
+          };
       Runtime: "nodejs6.10"
       Timeout: "300"
       MemorySize: 256
@@ -98,7 +115,11 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const msg = "Lambda function not yet deployed";
+            console.log(msg);
+            cb(msg);
+          };
       Runtime: "nodejs6.10"
       Timeout: "60"
       MemorySize: 256
@@ -111,7 +132,11 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const msg = "Lambda function not yet deployed";
+            console.log(msg);
+            cb(msg);
+          };
       Runtime: "nodejs6.10"
       Timeout: 5
       MemorySize: 128
@@ -124,7 +149,11 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const msg = "Lambda function not yet deployed";
+            console.log(msg);
+            cb(msg);
+          };
       Runtime: "nodejs6.10"
       Timeout: 5
       MemorySize: 128
@@ -137,7 +166,11 @@ Resources:
       Role: !GetAtt DelayerAWSGlobalRole.Arn
       Code:
         ZipFile: !Sub |
-          exports.handler = (e,c,cb) => { cb(null); };
+          exports.handler = (e,c,cb) => {
+            const msg = "Lambda function not yet deployed";
+            console.log(msg);
+            cb(msg);
+          };
       Runtime: "nodejs6.10"
       Timeout: 5
       MemorySize: 128
