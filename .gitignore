@@ -9,3 +9,4 @@ public/components
 test-results.xml
 coverage/
 dist/
+*.code-workspace
